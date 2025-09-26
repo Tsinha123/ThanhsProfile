@@ -1,53 +1,390 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Profile</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Thanh's Profile</title>
+<style>
+  /* Reset and base styles */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Header & Ribbon */
+  header {
+    grid-column: 1 / 3;
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    font-size: 24px;
+    font-weight: bold;
+    background: #222;
+    color: white;
+  }
+
+  .ribbon {
+    grid-column: 1 / 3;
+    height: 8px;
+    background: linear-gradient(to right, #f06, #f79);
+  }
+
+  /* Main content - games and news */
+  main {
+    grid-column: 1 / 2;
+    overflow-y: auto;
+    padding: 10px;
+    background: #fafafa;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  /* News sidebar */
+  aside {
+    grid-column: 2 / 3;
+    padding: 10px;
+    background: #fff;
+    border-left: 2px solid #ddd;
+    overflow-y: auto;
+  }
+
+  aside h2 {
+    margin-top: 0;
+    border-bottom: 2px solid #f06;
+    padding-bottom: 5px;
+  }
+
+  /* Canvas styling */
+  canvas {
+    background: #222;
+    display: block;
+    margin: 0 auto;
+    border-radius: 8px;
+    box-shadow: 0 0 10px #f06;
+  }
+
+  /* Games heading */
+  .game-title {
+    color: #333;
+    margin-bottom: 5px;
+    font-weight: 600;
+    text-align: center;
+  }
+
+</style>
 </head>
 <body>
-  <div class="header">
-    <img src="images/profile.jpg" alt="Profile" class="profile-pic" />
-    <h1>Your Name</h1>
-  </div>
+  <header>Thanh's Profile</header>
+  <div class="ribbon"></div>
 
-  <div class="schedule-container">
-    <h2>Schedules & Results</h2>
-    <div class="team-schedule" id="patriots-schedule">
-      <h3>New England Patriots (2025)</h3>
-      <table>
-        <thead>
-          <tr><th>Week</th><th>Opponent</th><th>Result</th><th>Score</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>1</td><td>vs Raiders</td><td class="loss">L</td><td>13‑20</td></tr>
-          <tr><td>2</td><td>@ Dolphins</td><td class="win">W</td><td>33‑27</td></tr>
-          <tr><td>3</td><td>vs Steelers</td><td class="loss">L</td><td>14‑21</td></tr>
-          <!-- Add more games here, with classes "win" or "loss" -->
-        </tbody>
-      </table>
-    </div>
+  <main>
+    <section id="crossy-road-section">
+      <h3 class="game-title">Crossy Road Clone</h3>
+      <canvas id="crossyRoad" width="400" height="300"></canvas>
+    </section>
 
-    <div class="team-schedule" id="redsox-schedule">
-      <h3>Boston Red Sox (2025)</h3>
-      <table>
-        <thead>
-          <tr><th>Date</th><th>Opponent</th><th>Result</th><th>Score</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Mar 27</td><td>@ Texas Rangers</td><td class="win">W</td><td>— 5</td></tr>
-          <tr><td>Mar 28</td><td>@ Texas Rangers</td><td class="loss">L</td><td>— 1</td></tr>
-          <tr><td>Mar 29</td><td>@ Texas Rangers</td><td class="loss">L</td><td>— 3</td></tr>
-          <tr><td>Mar 30</td><td>@ Texas Rangers</td><td class="loss">L</td><td>— 2</td></tr>
-          <tr><td>Mar 31</td><td>@ Orioles</td><td class="loss">L</td><td>— 5</td></tr>
-          <tr><td>Apr 2</td><td>@ Orioles</td><td class="win">W</td><td>— 3</td></tr>
-          <!-- Add more here -->
-        </tbody>
-      </table>
-    </div>
-  </div>
+    <section id="flappy-bird-section">
+      <h3 class="game-title">Flappy Bird Clone</h3>
+      <canvas id="flappyBird" width="400" height="300"></canvas>
+    </section>
+  </main>
 
-  <script src="script.js"></script>
+  <aside>
+    <h2>Football News</h2>
+    <ul id="football-news">
+      <li>Loading football news...</li>
+    </ul>
+
+    <h2>Baseball News</h2>
+    <ul id="baseball-news">
+      <li>Loading baseball news...</li>
+    </ul>
+  </aside>
+
+<script>
+  /* ===== Crossy Road Clone (simple) ===== */
+  const crossyCanvas = document.getElementById('crossyRoad');
+  const crossyCtx = crossyCanvas.getContext('2d');
+
+  const crossy = {
+    width: crossyCanvas.width,
+    height: crossyCanvas.height,
+    player: { x: 180, y: 260, size: 20 },
+    lanes: [
+      { y: 220, speed: 2, cars: [] },
+      { y: 180, speed: -3, cars: [] },
+      { y: 140, speed: 1.5, cars: [] },
+      { y: 100, speed: -2.5, cars: [] },
+    ],
+    keys: {}
+  };
+
+  // Initialize cars in lanes
+  crossy.lanes.forEach(lane => {
+    for (let i = 0; i < 3; i++) {
+      lane.cars.push({
+        x: Math.random() * crossy.width,
+        width: 50,
+        height: 20,
+      });
+    }
+  });
+
+  function drawCrossy() {
+    crossyCtx.clearRect(0, 0, crossy.width, crossy.height);
+
+    // Draw lanes
+    crossyCtx.fillStyle = '#555';
+    crossy.lanes.forEach(lane => {
+      crossyCtx.fillRect(0, lane.y, crossy.width, 30);
+    });
+
+    // Draw cars
+    crossyCtx.fillStyle = 'red';
+    crossy.lanes.forEach(lane => {
+      lane.cars.forEach(car => {
+        crossyCtx.fillRect(car.x, lane.y + 5, car.width, 20);
+      });
+    });
+
+    // Draw player (square)
+    crossyCtx.fillStyle = 'lime';
+    crossyCtx.fillRect(crossy.player.x, crossy.player.y, crossy.player.size, crossy.player.size);
+  }
+
+  function updateCrossy() {
+    // Move cars
+    crossy.lanes.forEach(lane => {
+      lane.cars.forEach(car => {
+        car.x += lane.speed;
+        if (lane.speed > 0 && car.x > crossy.width) car.x = -car.width;
+        else if (lane.speed < 0 && car.x + car.width < 0) car.x = crossy.width;
+      });
+    });
+
+    // Player movement
+    if (crossy.keys['ArrowUp']) {
+      crossy.player.y -= 3;
+      if (crossy.player.y < 0) crossy.player.y = 0;
+    }
+    if (crossy.keys['ArrowDown']) {
+      crossy.player.y += 3;
+      if (crossy.player.y > crossy.height - crossy.player.size) crossy.player.y = crossy.height - crossy.player.size;
+    }
+    if (crossy.keys['ArrowLeft']) {
+      crossy.player.x -= 3;
+      if (crossy.player.x < 0) crossy.player.x = 0;
+    }
+    if (crossy.keys['ArrowRight']) {
+      crossy.player.x += 3;
+      if (crossy.player.x > crossy.width - crossy.player.size) crossy.player.x = crossy.width - crossy.player.size;
+    }
+
+    // Collision detection
+    for (let lane of crossy.lanes) {
+      for (let car of lane.cars) {
+        if (
+          crossy.player.x < car.x + car.width &&
+          crossy.player.x + crossy.player.size > car.x &&
+          crossy.player.y < lane.y + 30 &&
+          crossy.player.y + crossy.player.size > lane.y
+        ) {
+          // Collision detected, reset player
+          crossy.player.x = 180;
+          crossy.player.y = 260;
+        }
+      }
+    }
+  }
+
+  function crossyLoop() {
+    updateCrossy();
+    drawCrossy();
+    requestAnimationFrame(crossyLoop);
+  }
+
+  window.addEventListener('keydown', e => {
+    crossy.keys[e.key] = true;
+  });
+  window.addEventListener('keyup', e => {
+    crossy.keys[e.key] = false;
+  });
+
+  crossyLoop();
+
+
+  /* ===== Flappy Bird Clone ===== */
+  const flappyCanvas = document.getElementById('flappyBird');
+  const flappyCtx = flappyCanvas.getContext('2d');
+
+  const flappy = {
+    width: flappyCanvas.width,
+    height: flappyCanvas.height,
+    bird: { x: 50, y: 150, radius: 12, velocity: 0 },
+    gravity: 0.5,
+    lift: -8,
+    pipes: [],
+    frameCount: 0,
+    pipeWidth: 50,
+    pipeGap: 120,
+    gameOver: false,
+    score: 0
+  };
+
+  function createPipe() {
+    const topHeight = Math.random() * (flappy.height / 2);
+    flappy.pipes.push({
+      x: flappy.width,
+      topHeight,
+      bottomY: topHeight + flappy.pipeGap,
+      bottomHeight: flappy.height - (topHeight + flappy.pipeGap)
+    });
+  }
+
+  function drawFlappy() {
+    flappyCtx.clearRect(0, 0, flappy.width, flappy.height);
+
+    // Draw bird
+    flappyCtx.fillStyle = 'yellow';
+    flappyCtx.beginPath();
+    flappyCtx.arc(flappy.bird.x, flappy.bird.y, flappy.bird.radius, 0, Math.PI * 2);
+    flappyCtx.fill();
+
+    // Draw pipes
+    flappyCtx.fillStyle = 'green';
+    flappy.pipes.forEach(pipe => {
+      // Top pipe
+      flappyCtx.fillRect(pipe.x, 0, flappy.pipeWidth, pipe.topHeight);
+      // Bottom pipe
+      flappyCtx.fillRect(pipe.x, pipe.bottomY, flappy.pipeWidth, pipe.bottomHeight);
+    });
+
+    // Draw score
+    flappyCtx.fillStyle = '#222';
+    flappyCtx.font = '20px Arial';
+    flappyCtx.fillText(`Score: ${flappy.score}`, 10, 25);
+
+    if (flappy.gameOver) {
+      flappyCtx.fillStyle = 'red';
+      flappyCtx.font = '40px Arial';
+      flappyCtx.fillText('Game Over', flappy.width / 2 - 100, flappy.height / 2);
+      flappyCtx.font = '20px Arial';
+      flappyCtx.fillText('Click to restart', flappy.width / 2 - 70, flappy.height / 2 + 30);
+    }
+  }
+
+  function updateFlappy() {
+    if (flappy.gameOver) return;
+
+    flappy.bird.velocity += flappy.gravity;
+    flappy.bird.y += flappy.bird.velocity;
+
+    if (flappy.bird.y + flappy.bird.radius > flappy.height) {
+      flappy.gameOver = true;
+    }
+
+    // Add pipes every 90 frames (~1.5 sec at 60fps)
+    flappy.frameCount++;
+    if (flappy.frameCount % 90 === 0) {
+      createPipe();
+    }
+
+    // Move pipes and check collisions
+    for (let i = flappy.pipes.length - 1; i >= 0; i--) {
+      const pipe = flappy.pipes[i];
+      pipe.x -= 3;
+
+      // Collision with bird
+      if (
+        flappy.bird.x + flappy.bird.radius > pipe.x &&
+        flappy.bird.x - flappy.bird.radius < pipe.x + flappy.pipeWidth &&
+        (flappy.bird.y - flappy.bird.radius < pipe.topHeight ||
+          flappy.bird.y + flappy.bird.radius > pipe.bottomY)
+      ) {
+        flappy.gameOver = true;
+      }
+
+      // Passed pipe
+      if (pipe.x + flappy.pipeWidth < flappy.bird.x && !pipe.passed) {
+        flappy.score++;
+        pipe.passed = true;
+      }
+
+      // Remove offscreen pipes
+      if (pipe.x + flappy.pipeWidth < 0) {
+        flappy.pipes.splice(i, 1);
+      }
+    }
+  }
+
+  function flappyLoop() {
+    updateFlappy();
+    drawFlappy();
+    requestAnimationFrame(flappyLoop);
+  }
+
+  flappyCanvas.addEventListener('click', () => {
+    if (flappy.gameOver) {
+      flappy.bird.y = 150;
+      flappy.bird.velocity = 0;
+      flappy.pipes = [];
+      flappy.score = 0;
+      flappy.frameCount = 0;
+      flappy.gameOver = false;
+    } else {
+      flappy.bird.velocity = flappy.lift;
+    }
+  });
+
+  flappyLoop();
+
+
+  /* ===== News Fetching (Fake) ===== */
+  const footballNewsEl = document.getElementById('football-news');
+  const baseballNewsEl = document.getElementById('baseball-news');
+
+  // Sample news data (replace with real API if needed)
+  const footballNews = [
+    "Team A wins the championship!",
+    "Star player transfers to new club.",
+    "Upcoming football season schedule announced.",
+    "Injury update on key defender.",
+  ];
+
+  const baseballNews = [
+    "Home run record broken!",
+    "Team B clinches playoff spot.",
+    "Pitcher throws a no-hitter.",
+    "New baseball stadium to open next year.",
+  ];
+
+  function populateNews() {
+    footballNewsEl.innerHTML = '';
+    baseballNewsEl.innerHTML = '';
+
+    footballNews.forEach(article => {
+      const li = document.createElement('li');
+      li.textContent = article;
+      footballNewsEl.appendChild(li);
+    });
+
+    baseballNews.forEach(article => {
+      const li = document.createElement('li');
+      li.textContent = article;
+      baseballNewsEl.appendChild(li);
+    });
+  }
+
+  populateNews();
+</script>
 </body>
 </html>
