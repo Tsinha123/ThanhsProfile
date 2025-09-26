@@ -37,15 +37,16 @@
       padding: 20px;
       background: #cce7ff; /* light blue background */
       display: flex;
+      flex-direction: column;  /* stack vertically */
       gap: 30px;
-      justify-content: center;
-      align-items: flex-start;
+      align-items: center;     /* center horizontally */
     }
     section {
       background: #fafafa;
       border-radius: 8px;
       padding: 15px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 640px; /* slightly wider than canvas */
     }
     .game-title {
       color: #333;
@@ -357,40 +358,37 @@
     // Draw paddles
     ppCtx.fillStyle = 'lime';
     ppCtx.fillRect(pingPong.leftPaddle.x, pingPong.leftPaddle.y, pingPong.paddleWidth, pingPong.paddleHeight);
-    ppCtx.fillStyle = 'red';
     ppCtx.fillRect(pingPong.rightPaddle.x, pingPong.rightPaddle.y, pingPong.paddleWidth, pingPong.paddleHeight);
 
     // Draw ball
-    ppCtx.fillStyle = 'yellow';
+    ppCtx.fillStyle = 'white';
     ppCtx.beginPath();
     ppCtx.arc(pingPong.ball.x, pingPong.ball.y, pingPong.ballRadius, 0, Math.PI * 2);
     ppCtx.fill();
 
     // Draw scores
     ppCtx.fillStyle = '#222';
-    ppCtx.font = '36px Arial';
-    ppCtx.fillText(pingPong.playerScore, pingPong.width / 4, 50);
-    ppCtx.fillText(pingPong.aiScore, pingPong.width * 3 / 4, 50);
+    ppCtx.font = '24px Arial';
+    ppCtx.fillText(pingPong.playerScore, pingPong.width / 4, 40);
+    ppCtx.fillText(pingPong.aiScore, pingPong.width * 3 / 4, 40);
   }
 
   function updatePingPong() {
-    // Move player paddle (W/S keys)
-    if (pingPong.keys['w'] || pingPong.keys['W']) {
+    // Player paddle movement
+    if (pingPong.keys['w'] && pingPong.leftPaddle.y > 0) {
       pingPong.leftPaddle.y -= pingPong.leftPaddle.speed;
-      if (pingPong.leftPaddle.y < 0) pingPong.leftPaddle.y = 0;
     }
-    if (pingPong.keys['s'] || pingPong.keys['S']) {
+    if (pingPong.keys['s'] && pingPong.leftPaddle.y + pingPong.paddleHeight < pingPong.height) {
       pingPong.leftPaddle.y += pingPong.leftPaddle.speed;
-      if (pingPong.leftPaddle.y + pingPong.paddleHeight > pingPong.height) pingPong.leftPaddle.y = pingPong.height - pingPong.paddleHeight;
     }
 
-    // Simple AI for right paddle: move towards the ball y position
-    let targetY = pingPong.ball.y - pingPong.paddleHeight / 2;
-    if (pingPong.rightPaddle.y + pingPong.paddleHeight / 2 < pingPong.ball.y) {
-      pingPong.rightPaddle.y += pingPong.rightPaddle.speed;
-    } else {
+    // AI paddle movement - simple AI
+    if (pingPong.ball.y < pingPong.rightPaddle.y + pingPong.paddleHeight / 2) {
       pingPong.rightPaddle.y -= pingPong.rightPaddle.speed;
+    } else {
+      pingPong.rightPaddle.y += pingPong.rightPaddle.speed;
     }
+    // Keep AI paddle in bounds
     if (pingPong.rightPaddle.y < 0) pingPong.rightPaddle.y = 0;
     if (pingPong.rightPaddle.y + pingPong.paddleHeight > pingPong.height) pingPong.rightPaddle.y = pingPong.height - pingPong.paddleHeight;
 
@@ -398,52 +396,47 @@
     pingPong.ball.x += pingPong.ball.velocityX;
     pingPong.ball.y += pingPong.ball.velocityY;
 
-    // Ball collision top/bottom
+    // Ball collision with top/bottom walls
     if (pingPong.ball.y + pingPong.ballRadius > pingPong.height || pingPong.ball.y - pingPong.ballRadius < 0) {
       pingPong.ball.velocityY = -pingPong.ball.velocityY;
     }
 
-    // Ball collision left paddle
+    // Ball collision with paddles
     if (
       pingPong.ball.x - pingPong.ballRadius < pingPong.leftPaddle.x + pingPong.paddleWidth &&
       pingPong.ball.y > pingPong.leftPaddle.y &&
       pingPong.ball.y < pingPong.leftPaddle.y + pingPong.paddleHeight
     ) {
       pingPong.ball.velocityX = -pingPong.ball.velocityX;
-      // Add some velocity based on paddle movement
-      let deltaY = pingPong.ball.y - (pingPong.leftPaddle.y + pingPong.paddleHeight / 2);
-      pingPong.ball.velocityY = deltaY * 0.3;
+      pingPong.ball.x = pingPong.leftPaddle.x + pingPong.paddleWidth + pingPong.ballRadius;
     }
 
-    // Ball collision right paddle
     if (
       pingPong.ball.x + pingPong.ballRadius > pingPong.rightPaddle.x &&
       pingPong.ball.y > pingPong.rightPaddle.y &&
       pingPong.ball.y < pingPong.rightPaddle.y + pingPong.paddleHeight
     ) {
       pingPong.ball.velocityX = -pingPong.ball.velocityX;
-      let deltaY = pingPong.ball.y - (pingPong.rightPaddle.y + pingPong.paddleHeight / 2);
-      pingPong.ball.velocityY = deltaY * 0.3;
+      pingPong.ball.x = pingPong.rightPaddle.x - pingPong.ballRadius;
     }
 
-    // Score check
-    if (pingPong.ball.x + pingPong.ballRadius < 0) {
-      // AI scores
+    // Score update
+    if (pingPong.ball.x < 0) {
       pingPong.aiScore++;
-      resetBall();
-    } else if (pingPong.ball.x - pingPong.ballRadius > pingPong.width) {
-      // Player scores
+      resetPingPong();
+    } else if (pingPong.ball.x > pingPong.width) {
       pingPong.playerScore++;
-      resetBall();
+      resetPingPong();
     }
   }
 
-  function resetBall() {
+  function resetPingPong() {
     pingPong.ball.x = pingPong.width / 2;
     pingPong.ball.y = pingPong.height / 2;
-    // Randomize initial direction:
-    pingPong.ball.velocityX = (Math.random() > 0.5 ? 6 : -6);
-    pingPong.ball.velocityY = (Math.random() * 6 - 3);
+    pingPong.ball.velocityX = -pingPong.ball.velocityX;
+    pingPong.ball.velocityY = 4 * (Math.random() > 0.5 ? 1 : -1);
+    pingPong.leftPaddle.y = pingPong.height / 2 - pingPong.paddleHeight / 2;
+    pingPong.rightPaddle.y = pingPong.height / 2 - pingPong.paddleHeight / 2;
   }
 
   function pingPongLoop() {
@@ -453,16 +446,13 @@
   }
 
   window.addEventListener('keydown', e => {
-    pingPong.keys[e.key] = true;
+    pingPong.keys[e.key.toLowerCase()] = true;
   });
   window.addEventListener('keyup', e => {
-    pingPong.keys[e.key] = false;
+    pingPong.keys[e.key.toLowerCase()] = false;
   });
 
-  resetBall();
   pingPongLoop();
-
 </script>
-
 </body>
 </html>
