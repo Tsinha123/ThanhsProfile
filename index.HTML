@@ -11,13 +11,13 @@
       margin: 0;
       font-family: Arial, sans-serif;
       display: grid;
-      grid-template-columns: 2fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       grid-template-rows: auto 1fr;
       height: 100vh;
       overflow: hidden;
     }
     header {
-      grid-column: 1 / 3;
+      grid-column: 1 / 4;
       display: flex;
       align-items: center;
       padding: 10px 20px;
@@ -27,30 +27,32 @@
       color: white;
     }
     .ribbon {
-      grid-column: 1 / 3;
+      grid-column: 1 / 4;
       height: 8px;
       background: linear-gradient(to right, #f06, #f79);
     }
     main {
-      grid-column: 1 / 2;
+      grid-column: 1 / 4;
       overflow-y: auto;
-      padding: 10px;
-      background: #fafafa;
+      padding: 20px;
+      background: #cce7ff; /* light blue background */
       display: flex;
-      flex-direction: column;
       gap: 30px;
+      justify-content: center;
+      align-items: flex-start;
     }
-    aside {
-      grid-column: 2 / 3;
-      padding: 10px;
-      background: #fff;
-      border-left: 2px solid #ddd;
-      overflow-y: auto;
+    section {
+      background: #fafafa;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    aside h2 {
-      margin-top: 0;
-      border-bottom: 2px solid #f06;
-      padding-bottom: 5px;
+    .game-title {
+      color: #333;
+      margin-bottom: 10px;
+      font-weight: 600;
+      text-align: center;
+      font-size: 22px;
     }
     canvas {
       background: #222;
@@ -58,22 +60,7 @@
       margin: 0 auto;
       border-radius: 8px;
       box-shadow: 0 0 10px #f06;
-    }
-    .game-title {
-      color: #333;
-      margin-bottom: 5px;
-      font-weight: 600;
-      text-align: center;
-    }
-    ul {
-      padding-left: 1em;
-    }
-    a {
-      color: #f06;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
+      cursor: default;
     }
   </style>
 </head>
@@ -84,26 +71,19 @@
   <main>
     <section id="crossy-road-section">
       <h3 class="game-title">Crossy Road Clone</h3>
-      <canvas id="crossyRoad" width="400" height="300"></canvas>
+      <canvas id="crossyRoad" width="600" height="450"></canvas>
     </section>
 
     <section id="flappy-bird-section">
       <h3 class="game-title">Flappy Bird Clone</h3>
-      <canvas id="flappyBird" width="400" height="300"></canvas>
+      <canvas id="flappyBird" width="600" height="450"></canvas>
+    </section>
+
+    <section id="ping-pong-section">
+      <h3 class="game-title">Ping Pong</h3>
+      <canvas id="pingPong" width="600" height="450"></canvas>
     </section>
   </main>
-
-  <aside>
-    <h2>Football News</h2>
-    <ul id="football-news">
-      <li>Loading football news...</li>
-    </ul>
-
-    <h2>Baseball News</h2>
-    <ul id="baseball-news">
-      <li>Loading baseball news...</li>
-    </ul>
-  </aside>
 
 <script>
   /* ===== Crossy Road Clone (simple) ===== */
@@ -113,23 +93,23 @@
   const crossy = {
     width: crossyCanvas.width,
     height: crossyCanvas.height,
-    player: { x: 180, y: 260, size: 20 },
+    player: { x: 280, y: 410, size: 30 },
     lanes: [
-      { y: 220, speed: 2, cars: [] },
-      { y: 180, speed: -3, cars: [] },
-      { y: 140, speed: 1.5, cars: [] },
-      { y: 100, speed: -2.5, cars: [] },
+      { y: 360, speed: 2, cars: [] },
+      { y: 290, speed: -3, cars: [] },
+      { y: 230, speed: 1.5, cars: [] },
+      { y: 170, speed: -2.5, cars: [] },
     ],
     keys: {}
   };
 
   // Initialize cars in lanes
   crossy.lanes.forEach(lane => {
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       lane.cars.push({
         x: Math.random() * crossy.width,
-        width: 50,
-        height: 20,
+        width: 80,
+        height: 30,
       });
     }
   });
@@ -140,14 +120,14 @@
     // Draw lanes
     crossyCtx.fillStyle = '#555';
     crossy.lanes.forEach(lane => {
-      crossyCtx.fillRect(0, lane.y, crossy.width, 30);
+      crossyCtx.fillRect(0, lane.y, crossy.width, 40);
     });
 
     // Draw cars
     crossyCtx.fillStyle = 'red';
     crossy.lanes.forEach(lane => {
       lane.cars.forEach(car => {
-        crossyCtx.fillRect(car.x, lane.y + 5, car.width, 20);
+        crossyCtx.fillRect(car.x, lane.y + 5, car.width, 30);
       });
     });
 
@@ -168,19 +148,19 @@
 
     // Player movement
     if (crossy.keys['ArrowUp']) {
-      crossy.player.y -= 3;
+      crossy.player.y -= 5;
       if (crossy.player.y < 0) crossy.player.y = 0;
     }
     if (crossy.keys['ArrowDown']) {
-      crossy.player.y += 3;
+      crossy.player.y += 5;
       if (crossy.player.y > crossy.height - crossy.player.size) crossy.player.y = crossy.height - crossy.player.size;
     }
     if (crossy.keys['ArrowLeft']) {
-      crossy.player.x -= 3;
+      crossy.player.x -= 5;
       if (crossy.player.x < 0) crossy.player.x = 0;
     }
     if (crossy.keys['ArrowRight']) {
-      crossy.player.x += 3;
+      crossy.player.x += 5;
       if (crossy.player.x > crossy.width - crossy.player.size) crossy.player.x = crossy.width - crossy.player.size;
     }
 
@@ -190,12 +170,12 @@
         if (
           crossy.player.x < car.x + car.width &&
           crossy.player.x + crossy.player.size > car.x &&
-          crossy.player.y < lane.y + 30 &&
+          crossy.player.y < lane.y + 40 &&
           crossy.player.y + crossy.player.size > lane.y
         ) {
           // Collision detected, reset player
-          crossy.player.x = 180;
-          crossy.player.y = 260;
+          crossy.player.x = 280;
+          crossy.player.y = 410;
         }
       }
     }
@@ -224,13 +204,13 @@
   const flappy = {
     width: flappyCanvas.width,
     height: flappyCanvas.height,
-    bird: { x: 50, y: 150, radius: 12, velocity: 0 },
-    gravity: 0.5,
-    lift: -8,
+    bird: { x: 75, y: 225, radius: 18, velocity: 0 },
+    gravity: 0.6,
+    lift: -10,
     pipes: [],
     frameCount: 0,
-    pipeWidth: 50,
-    pipeGap: 120,
+    pipeWidth: 80,
+    pipeGap: 160,
     gameOver: false,
     score: 0
   };
@@ -265,15 +245,15 @@
 
     // Draw score
     flappyCtx.fillStyle = '#222';
-    flappyCtx.font = '20px Arial';
-    flappyCtx.fillText(`Score: ${flappy.score}`, 10, 25);
+    flappyCtx.font = '24px Arial';
+    flappyCtx.fillText(`Score: ${flappy.score}`, 15, 35);
 
     if (flappy.gameOver) {
       flappyCtx.fillStyle = 'red';
-      flappyCtx.font = '40px Arial';
-      flappyCtx.fillText('Game Over', flappy.width / 2 - 100, flappy.height / 2);
-      flappyCtx.font = '20px Arial';
-      flappyCtx.fillText('Click to restart', flappy.width / 2 - 70, flappy.height / 2 + 30);
+      flappyCtx.font = '48px Arial';
+      flappyCtx.fillText('Game Over', flappy.width / 2 - 130, flappy.height / 2);
+      flappyCtx.font = '24px Arial';
+      flappyCtx.fillText('Click to restart', flappy.width / 2 - 90, flappy.height / 2 + 40);
     }
   }
 
@@ -283,7 +263,7 @@
     flappy.bird.velocity += flappy.gravity;
     flappy.bird.y += flappy.bird.velocity;
 
-    if (flappy.bird.y + flappy.bird.radius > flappy.height) {
+    if (flappy.bird.y + flappy.bird.radius > flappy.height || flappy.bird.y - flappy.bird.radius < 0) {
       flappy.gameOver = true;
     }
 
@@ -296,7 +276,7 @@
     // Move pipes and check collisions
     for (let i = flappy.pipes.length - 1; i >= 0; i--) {
       const pipe = flappy.pipes[i];
-      pipe.x -= 3;
+      pipe.x -= 4;
 
       // Collision with bird
       if (
@@ -329,7 +309,7 @@
 
   flappyCanvas.addEventListener('click', () => {
     if (flappy.gameOver) {
-      flappy.bird.y = 150;
+      flappy.bird.y = 225;
       flappy.bird.velocity = 0;
       flappy.pipes = [];
       flappy.score = 0;
@@ -343,14 +323,146 @@
   flappyLoop();
 
 
-  /* ===== ESPN News Fetching ===== */
-  async function fetchESPNNews() {
-    const footballFeed = 'https://www.espn.com/espn/rss/nfl/news';
-    const baseballFeed = 'https://www.espn.com/espn/rss/mlb/news';
+  /* ===== Ping Pong ===== */
+  const pingPongCanvas = document.getElementById('pingPong');
+  const ppCtx = pingPongCanvas.getContext('2d');
 
-    // Use a proxy to avoid CORS issues on GitHub Pages (optional)
-    // If you have your own CORS proxy or backend, replace this URL
-    const corsProxy = 'https://api.allorigins.win/get?url=';
+  const pingPong = {
+    width: pingPongCanvas.width,
+    height: pingPongCanvas.height,
+    paddleWidth: 15,
+    paddleHeight: 100,
+    ballRadius: 12,
+    leftPaddle: { x: 10, y: 175, speed: 8 },
+    rightPaddle: { x: 575, y: 175, speed: 6 },
+    ball: { x: 300, y: 225, velocityX: 6, velocityY: 4 },
+    keys: {},
+    playerScore: 0,
+    aiScore: 0,
+  };
 
-    async function parseRSS(url) {
-      const response = await fetch(cors
+  function drawPingPong() {
+    ppCtx.clearRect(0, 0, pingPong.width, pingPong.height);
+
+    // Draw middle line
+    ppCtx.strokeStyle = '#f06';
+    ppCtx.lineWidth = 3;
+    ppCtx.setLineDash([15, 10]);
+    ppCtx.beginPath();
+    ppCtx.moveTo(pingPong.width/2, 0);
+    ppCtx.lineTo(pingPong.width/2, pingPong.height);
+    ppCtx.stroke();
+    ppCtx.setLineDash([]);
+
+    // Draw paddles
+    ppCtx.fillStyle = 'lime';
+    ppCtx.fillRect(pingPong.leftPaddle.x, pingPong.leftPaddle.y, pingPong.paddleWidth, pingPong.paddleHeight);
+    ppCtx.fillStyle = 'red';
+    ppCtx.fillRect(pingPong.rightPaddle.x, pingPong.rightPaddle.y, pingPong.paddleWidth, pingPong.paddleHeight);
+
+    // Draw ball
+    ppCtx.fillStyle = 'yellow';
+    ppCtx.beginPath();
+    ppCtx.arc(pingPong.ball.x, pingPong.ball.y, pingPong.ballRadius, 0, Math.PI * 2);
+    ppCtx.fill();
+
+    // Draw scores
+    ppCtx.fillStyle = '#222';
+    ppCtx.font = '36px Arial';
+    ppCtx.fillText(pingPong.playerScore, pingPong.width / 4, 50);
+    ppCtx.fillText(pingPong.aiScore, pingPong.width * 3 / 4, 50);
+  }
+
+  function updatePingPong() {
+    // Move player paddle (W/S keys)
+    if (pingPong.keys['w'] || pingPong.keys['W']) {
+      pingPong.leftPaddle.y -= pingPong.leftPaddle.speed;
+      if (pingPong.leftPaddle.y < 0) pingPong.leftPaddle.y = 0;
+    }
+    if (pingPong.keys['s'] || pingPong.keys['S']) {
+      pingPong.leftPaddle.y += pingPong.leftPaddle.speed;
+      if (pingPong.leftPaddle.y + pingPong.paddleHeight > pingPong.height) pingPong.leftPaddle.y = pingPong.height - pingPong.paddleHeight;
+    }
+
+    // Simple AI for right paddle: move towards the ball y position
+    let targetY = pingPong.ball.y - pingPong.paddleHeight / 2;
+    if (pingPong.rightPaddle.y + pingPong.paddleHeight / 2 < pingPong.ball.y) {
+      pingPong.rightPaddle.y += pingPong.rightPaddle.speed;
+    } else {
+      pingPong.rightPaddle.y -= pingPong.rightPaddle.speed;
+    }
+    if (pingPong.rightPaddle.y < 0) pingPong.rightPaddle.y = 0;
+    if (pingPong.rightPaddle.y + pingPong.paddleHeight > pingPong.height) pingPong.rightPaddle.y = pingPong.height - pingPong.paddleHeight;
+
+    // Move ball
+    pingPong.ball.x += pingPong.ball.velocityX;
+    pingPong.ball.y += pingPong.ball.velocityY;
+
+    // Ball collision top/bottom
+    if (pingPong.ball.y + pingPong.ballRadius > pingPong.height || pingPong.ball.y - pingPong.ballRadius < 0) {
+      pingPong.ball.velocityY = -pingPong.ball.velocityY;
+    }
+
+    // Ball collision left paddle
+    if (
+      pingPong.ball.x - pingPong.ballRadius < pingPong.leftPaddle.x + pingPong.paddleWidth &&
+      pingPong.ball.y > pingPong.leftPaddle.y &&
+      pingPong.ball.y < pingPong.leftPaddle.y + pingPong.paddleHeight
+    ) {
+      pingPong.ball.velocityX = -pingPong.ball.velocityX;
+      // Add some velocity based on paddle movement
+      let deltaY = pingPong.ball.y - (pingPong.leftPaddle.y + pingPong.paddleHeight / 2);
+      pingPong.ball.velocityY = deltaY * 0.3;
+    }
+
+    // Ball collision right paddle
+    if (
+      pingPong.ball.x + pingPong.ballRadius > pingPong.rightPaddle.x &&
+      pingPong.ball.y > pingPong.rightPaddle.y &&
+      pingPong.ball.y < pingPong.rightPaddle.y + pingPong.paddleHeight
+    ) {
+      pingPong.ball.velocityX = -pingPong.ball.velocityX;
+      let deltaY = pingPong.ball.y - (pingPong.rightPaddle.y + pingPong.paddleHeight / 2);
+      pingPong.ball.velocityY = deltaY * 0.3;
+    }
+
+    // Score check
+    if (pingPong.ball.x + pingPong.ballRadius < 0) {
+      // AI scores
+      pingPong.aiScore++;
+      resetBall();
+    } else if (pingPong.ball.x - pingPong.ballRadius > pingPong.width) {
+      // Player scores
+      pingPong.playerScore++;
+      resetBall();
+    }
+  }
+
+  function resetBall() {
+    pingPong.ball.x = pingPong.width / 2;
+    pingPong.ball.y = pingPong.height / 2;
+    // Randomize initial direction:
+    pingPong.ball.velocityX = (Math.random() > 0.5 ? 6 : -6);
+    pingPong.ball.velocityY = (Math.random() * 6 - 3);
+  }
+
+  function pingPongLoop() {
+    updatePingPong();
+    drawPingPong();
+    requestAnimationFrame(pingPongLoop);
+  }
+
+  window.addEventListener('keydown', e => {
+    pingPong.keys[e.key] = true;
+  });
+  window.addEventListener('keyup', e => {
+    pingPong.keys[e.key] = false;
+  });
+
+  resetBall();
+  pingPongLoop();
+
+</script>
+
+</body>
+</html>
