@@ -1,1 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="header">
+    <img src="images/profile.jpg" alt="Profile" class="profile-pic" />
+    <h1>Your Name</h1>
+  </div>
 
+  <div class="schedule-container">
+    <h2>Schedules & Results</h2>
+    <div class="team-schedule" id="patriots-schedule">
+      <h3>New England Patriots (2025)</h3>
+      <table>
+        <thead>
+          <tr><th>Week</th><th>Opponent</th><th>Result</th><th>Score</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>vs Raiders</td><td class="loss">L</td><td>13‑20</td></tr>
+          <tr><td>2</td><td>@ Dolphins</td><td class="win">W</td><td>33‑27</td></tr>
+          <tr><td>3</td><td>vs Steelers</td><td class="loss">L</td><td>14‑21</td></tr>
+          <!-- Add more games here, with classes "win" or "loss" -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="team-schedule" id="redsox-schedule">
+      <h3>Boston Red Sox (2025)</h3>
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Opponent</th><th>Result</th><th>Score</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Mar 27</td><td>@ Texas Rangers</td><td class="win">W</td><td>— 5</td></tr>
+          <tr><td>Mar 28</td><td>@ Texas Rangers</td><td class="loss">L</td><td>— 1</td></tr>
+          <tr><td>Mar 29</td><td>@ Texas Rangers</td><td class="loss">L</td><td>— 3</td></tr>
+          <tr><td>Mar 30</td><td>@ Texas Rangers</td><td class="loss">L</td><td>— 2</td></tr>
+          <tr><td>Mar 31</td><td>@ Orioles</td><td class="loss">L</td><td>— 5</td></tr>
+          <tr><td>Apr 2</td><td>@ Orioles</td><td class="win">W</td><td>— 3</td></tr>
+          <!-- Add more here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
