@@ -11,7 +11,7 @@
       font-family: Arial, sans-serif;
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      grid-template-rows: auto 1fr;
+      grid-template-rows: auto auto auto 1fr;
       height: 100vh;
       overflow: hidden;
     }
@@ -30,11 +30,75 @@
       height: 8px;
       background: linear-gradient(to right, #f06, #f79);
     }
+    .datetime {
+      grid-column: 1 / 4;
+      text-align: center;
+      padding: 15px;
+      font-size: 18px;
+      font-weight: 500;
+      background: #fff3e6;
+      border-bottom: 2px solid #f06;
+    }
+    .calendar {
+      grid-column: 1 / 4;
+      background: #fff;
+      padding: 20px;
+      border-bottom: 2px solid #ccc;
+    }
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .calendar-header button {
+      background: #f06;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .calendar-header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+    .calendar-day {
+      text-align: center;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .calendar-day:hover {
+      background: #f9d3e4;
+    }
+    .calendar-day.today {
+      background: #f06;
+      color: white;
+      font-weight: bold;
+    }
+    .calendar-day.selected {
+      background: #333;
+      color: white;
+    }
+    .day-name {
+      font-weight: bold;
+      color: #555;
+    }
     main {
       grid-column: 1 / 4;
       overflow-y: auto;
       padding: 20px;
-      background: #f5f5dc; /* Tanish background */
+      background: #f5f5dc;
       display: flex;
       flex-direction: column;
       gap: 30px;
@@ -60,341 +124,233 @@
       margin: 0 auto;
       border-radius: 8px;
       box-shadow: 0 0 10px #f06;
-      cursor: default;
+    }
+    .score {
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      margin: 8px 0;
+      color: #444;
     }
   </style>
 </head>
 <body>
   <header>Thanh's Profile</header>
   <div class="ribbon"></div>
+  <div class="datetime" id="datetime"></div>
+
+  <!-- ===== Calendar ===== -->
+  <div class="calendar">
+    <div class="calendar-header">
+      <button id="prevMonth">&lt;</button>
+      <h2 id="calendarMonth"></h2>
+      <button id="nextMonth">&gt;</button>
+    </div>
+    <div class="calendar-grid" id="calendarDays"></div>
+  </div>
 
   <main>
-    <section id="crossy-road-section">
-      <h3 class="game-title">Crossy Road Clone</h3>
+    <section>
+      <h3 class="game-title">Crossy Road</h3>
+      <div class="score" id="crossyScore">Score: 0</div>
       <canvas id="crossyRoad" width="600" height="450"></canvas>
     </section>
 
-    <section id="flappy-bird-section">
-      <h3 class="game-title">Flappy Bird Clone</h3>
+    <section>
+      <h3 class="game-title">Flappy Bird</h3>
+      <div class="score" id="flappyScore">Score: 0</div>
       <canvas id="flappyBird" width="600" height="450"></canvas>
     </section>
 
-    <section id="ping-pong-section">
+    <section>
       <h3 class="game-title">Ping Pong</h3>
+      <div class="score" id="pongScore">Score: 0</div>
       <canvas id="pingPong" width="600" height="450"></canvas>
     </section>
   </main>
 
 <script>
-  /* ===== Crossy Road Clone ===== */
-  const crossyCanvas = document.getElementById('crossyRoad');
-  const crossyCtx = crossyCanvas.getContext('2d');
+  /* ===== Date & Time ===== */
+  function updateDateTime() {
+    const now = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const dateStr = now.toLocaleDateString(undefined, options);
+    const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById('datetime').textContent = `${dateStr} — ${timeStr}`;
+  }
+  setInterval(updateDateTime, 1000);
+  updateDateTime();
 
-  const crossy = {
-    width: crossyCanvas.width,
-    height: crossyCanvas.height,
-    player: { x: 280, y: 410, size: 30 },
-    lanes: [
-      { y: 360, speed: 2, cars: [] },
-      { y: 290, speed: -3, cars: [] },
-      { y: 230, speed: 1.5, cars: [] },
-      { y: 170, speed: -2.5, cars: [] },
-    ],
-    keys: {}
-  };
+  /* ===== Calendar ===== */
+  const calendarDays = document.getElementById("calendarDays");
+  const calendarMonth = document.getElementById("calendarMonth");
+  const prevMonthBtn = document.getElementById("prevMonth");
+  const nextMonthBtn = document.getElementById("nextMonth");
 
-  crossy.lanes.forEach(lane => {
-    for (let i = 0; i < 4; i++) {
-      lane.cars.push({
-        x: Math.random() * crossy.width,
-        width: 80,
-        height: 30,
-      });
+  let currentDate = new Date();
+  let selectedDay = null;
+
+  function renderCalendar(date) {
+    calendarDays.innerHTML = "";
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const monthName = date.toLocaleString("default", { month: "long" });
+    calendarMonth.textContent = `${monthName} ${year}`;
+
+    // Day names
+    const dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    dayNames.forEach(day => {
+      const div = document.createElement("div");
+      div.textContent = day;
+      div.classList.add("day-name");
+      calendarDays.appendChild(div);
+    });
+
+    // Empty cells
+    for (let i = 0; i < firstDay; i++) {
+      const empty = document.createElement("div");
+      calendarDays.appendChild(empty);
     }
-  });
 
+    // Days
+    for (let day = 1; day <= daysInMonth; day++) {
+      const div = document.createElement("div");
+      div.textContent = day;
+      div.classList.add("calendar-day");
+
+      const today = new Date();
+      if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+        div.classList.add("today");
+      }
+
+      if (selectedDay && selectedDay.day === day && selectedDay.month === month && selectedDay.year === year) {
+        div.classList.add("selected");
+      }
+
+      div.addEventListener("click", () => {
+        selectedDay = { day, month, year };
+        renderCalendar(currentDate);
+      });
+
+      calendarDays.appendChild(div);
+    }
+  }
+  prevMonthBtn.addEventListener("click", () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar(currentDate);
+  });
+  nextMonthBtn.addEventListener("click", () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar(currentDate);
+  });
+  renderCalendar(currentDate);
+
+  /* ===== Crossy Road ===== */
+  const crossy = document.getElementById("crossyRoad");
+  const ctx1 = crossy.getContext("2d");
+  let player = { x: 280, y: 400, size: 20 };
+  let cars = [];
+  let crossyScore = 0;
+
+  function spawnCar() {
+    cars.push({ x: Math.random() * 600, y: 0, w: 40, h: 20, speed: 2 + Math.random() * 3 });
+  }
   function drawCrossy() {
-    crossyCtx.clearRect(0, 0, crossy.width, crossy.height);
-    crossyCtx.fillStyle = '#555';
-    crossy.lanes.forEach(lane => {
-      crossyCtx.fillRect(0, lane.y, crossy.width, 40);
-    });
-    crossyCtx.fillStyle = 'red';
-    crossy.lanes.forEach(lane => {
-      lane.cars.forEach(car => {
-        crossyCtx.fillRect(car.x, lane.y + 5, car.width, 30);
-      });
-    });
-    crossyCtx.fillStyle = 'lime';
-    crossyCtx.fillRect(crossy.player.x, crossy.player.y, crossy.player.size, crossy.player.size);
-  }
-
-  function updateCrossy() {
-    crossy.lanes.forEach(lane => {
-      lane.cars.forEach(car => {
-        car.x += lane.speed;
-        if (lane.speed > 0 && car.x > crossy.width) car.x = -car.width;
-        else if (lane.speed < 0 && car.x + car.width < 0) car.x = crossy.width;
-      });
-    });
-
-    if (crossy.keys['ArrowUp']) crossy.player.y -= 5;
-    if (crossy.keys['ArrowDown']) crossy.player.y += 5;
-    if (crossy.keys['ArrowLeft']) crossy.player.x -= 5;
-    if (crossy.keys['ArrowRight']) crossy.player.x += 5;
-
-    crossy.player.x = Math.max(0, Math.min(crossy.width - crossy.player.size, crossy.player.x));
-    crossy.player.y = Math.max(0, Math.min(crossy.height - crossy.player.size, crossy.player.y));
-
-    for (let lane of crossy.lanes) {
-      for (let car of lane.cars) {
-        if (
-          crossy.player.x < car.x + car.width &&
-          crossy.player.x + crossy.player.size > car.x &&
-          crossy.player.y < lane.y + 40 &&
-          crossy.player.y + crossy.player.size > lane.y
-        ) {
-          crossy.player.x = 280;
-          crossy.player.y = 410;
-        }
-      }
-    }
-  }
-
-  function crossyLoop() {
-    updateCrossy();
-    drawCrossy();
-    requestAnimationFrame(crossyLoop);
-  }
-
-  window.addEventListener('keydown', e => crossy.keys[e.key] = true);
-  window.addEventListener('keyup', e => crossy.keys[e.key] = false);
-  crossyLoop();
-
-  /* ===== Flappy Bird Clone ===== */
-  const flappyCanvas = document.getElementById('flappyBird');
-  const flappyCtx = flappyCanvas.getContext('2d');
-
-  const flappy = {
-    width: flappyCanvas.width,
-    height: flappyCanvas.height,
-    bird: { x: 75, y: 225, radius: 18, velocity: 0 },
-    gravity: 0.6,
-    lift: -10,
-    pipes: [],
-    frameCount: 0,
-    pipeWidth: 80,
-    pipeGap: 160,
-    gameOver: false,
-    score: 0
-  };
-
-  function createPipe() {
-    const topHeight = Math.random() * (flappy.height / 2);
-    flappy.pipes.push({
-      x: flappy.width,
-      topHeight,
-      bottomY: topHeight + flappy.pipeGap,
-      bottomHeight: flappy.height - (topHeight + flappy.pipeGap)
-    });
-  }
-
-  function drawFlappy() {
-    flappyCtx.clearRect(0, 0, flappy.width, flappy.height);
-
-    flappyCtx.fillStyle = 'yellow';
-    flappyCtx.beginPath();
-    flappyCtx.arc(flappy.bird.x, flappy.bird.y, flappy.bird.radius, 0, Math.PI * 2);
-    flappyCtx.fill();
-
-    flappyCtx.fillStyle = 'green';
-    flappy.pipes.forEach(pipe => {
-      flappyCtx.fillRect(pipe.x, 0, flappy.pipeWidth, pipe.topHeight);
-      flappyCtx.fillRect(pipe.x, pipe.bottomY, flappy.pipeWidth, pipe.bottomHeight);
-    });
-
-    flappyCtx.fillStyle = '#222';
-    flappyCtx.font = '24px Arial';
-    flappyCtx.fillText(`Score: ${flappy.score}`, 15, 35);
-
-    if (flappy.gameOver) {
-      flappyCtx.fillStyle = 'red';
-      flappyCtx.font = '48px Arial';
-      flappyCtx.fillText('Game Over', flappy.width / 2 - 130, flappy.height / 2);
-      flappyCtx.font = '24px Arial';
-      flappyCtx.fillText('Click to restart', flappy.width / 2 - 90, flappy.height / 2 + 40);
-    }
-  }
-
-  function updateFlappy() {
-    if (flappy.gameOver) return;
-
-    flappy.bird.velocity += flappy.gravity;
-    flappy.bird.y += flappy.bird.velocity;
-
-    if (flappy.frameCount % 90 === 0) createPipe();
-
-    flappy.pipes.forEach(pipe => {
-      pipe.x -= 3;
-
-      if (pipe.x + flappy.pipeWidth === flappy.bird.x) {
-        flappy.score++;
-      }
-
-      if (
-        flappy.bird.x + flappy.bird.radius > pipe.x &&
-        flappy.bird.x - flappy.bird.radius < pipe.x + flappy.pipeWidth &&
-        (
-          flappy.bird.y - flappy.bird.radius < pipe.topHeight ||
-          flappy.bird.y + flappy.bird.radius > pipe.bottomY
-        )
-      ) {
-        flappy.gameOver = true;
+    ctx1.clearRect(0,0,600,450);
+    ctx1.fillStyle = "lime";
+    ctx1.fillRect(player.x, player.y, player.size, player.size);
+    ctx1.fillStyle = "red";
+    cars.forEach(c => {
+      ctx1.fillRect(c.x, c.y, c.w, c.h);
+      c.y += c.speed;
+      if (c.y > 450) { c.y = -20; c.x = Math.random()*560; crossyScore++; }
+      if (player.x < c.x + c.w && player.x + player.size > c.x &&
+          player.y < c.y + c.h && player.y + player.size > c.y) {
+        player.y = 400; crossyScore = 0;
       }
     });
-
-    flappy.pipes = flappy.pipes.filter(pipe => pipe.x + flappy.pipeWidth > 0);
-
-    if (flappy.bird.y + flappy.bird.radius > flappy.height || flappy.bird.y < 0) {
-      flappy.gameOver = true;
-    }
-
-    flappy.frameCount++;
+    document.getElementById("crossyScore").textContent = "Score: " + crossyScore;
   }
-
-  flappyCanvas.addEventListener('click', () => {
-    if (flappy.gameOver) {
-      flappy.bird.y = 225;
-      flappy.bird.velocity = 0;
-      flappy.pipes = [];
-      flappy.frameCount = 0;
-      flappy.score = 0;
-      flappy.gameOver = false;
-    } else {
-      flappy.bird.velocity = flappy.lift;
-    }
+  setInterval(drawCrossy, 30);
+  setInterval(spawnCar, 2000);
+  window.addEventListener("keydown", e => {
+    if (e.key === "ArrowUp") player.y -= 20;
+    if (e.key === "ArrowDown") player.y += 20;
+    if (e.key === "ArrowLeft") player.x -= 20;
+    if (e.key === "ArrowRight") player.x += 20;
   });
 
-  function flappyLoop() {
-    updateFlappy();
-    drawFlappy();
-    requestAnimationFrame(flappyLoop);
+  /* ===== Flappy Bird ===== */
+  const flappy = document.getElementById("flappyBird");
+  const ctx2 = flappy.getContext("2d");
+  let bird = { x: 100, y: 200, r: 15, velocity: 0 };
+  let pipes = [];
+  let flappyScore = 0;
+
+  function spawnPipe() {
+    const gap = 120;
+    const top = Math.random() * 200 + 50;
+    pipes.push({ x: 600, top, bottom: top + gap });
   }
-  flappyLoop();
-
-  /* ===== Ping Pong with Arrow Keys ===== */
-  const pingPongCanvas = document.getElementById('pingPong');
-  const ppCtx = pingPongCanvas.getContext('2d');
-
-  const pingPong = {
-    width: pingPongCanvas.width,
-    height: pingPongCanvas.height,
-    paddleWidth: 15,
-    paddleHeight: 100,
-    ballRadius: 12,
-    leftPaddle: { x: 10, y: 175, speed: 8 },
-    rightPaddle: { x: 575, y: 175, speed: 6 },
-    ball: { x: 300, y: 225, velocityX: 6, velocityY: 4 },
-    keys: {},
-    playerScore: 0,
-    aiScore: 0,
-  };
-
-  function drawPingPong() {
-    ppCtx.clearRect(0, 0, pingPong.width, pingPong.height);
-
-    ppCtx.strokeStyle = '#f06';
-    ppCtx.lineWidth = 3;
-    ppCtx.setLineDash([15, 10]);
-    ppCtx.beginPath();
-    ppCtx.moveTo(pingPong.width/2, 0);
-    ppCtx.lineTo(pingPong.width/2, pingPong.height);
-    ppCtx.stroke();
-    ppCtx.setLineDash([]);
-
-    ppCtx.fillStyle = 'lime';
-    ppCtx.fillRect(pingPong.leftPaddle.x, pingPong.leftPaddle.y, pingPong.paddleWidth, pingPong.paddleHeight);
-    ppCtx.fillRect(pingPong.rightPaddle.x, pingPong.rightPaddle.y, pingPong.paddleWidth, pingPong.paddleHeight);
-
-    ppCtx.fillStyle = 'white';
-    ppCtx.beginPath();
-    ppCtx.arc(pingPong.ball.x, pingPong.ball.y, pingPong.ballRadius, 0, Math.PI * 2);
-    ppCtx.fill();
-
-    ppCtx.fillStyle = '#222';
-    ppCtx.font = '24px Arial';
-    ppCtx.fillText(pingPong.playerScore, pingPong.width / 4, 40);
-    ppCtx.fillText(pingPong.aiScore, pingPong.width * 3 / 4, 40);
+  function drawFlappy() {
+    ctx2.clearRect(0,0,600,450);
+    bird.velocity += 0.5;
+    bird.y += bird.velocity;
+    ctx2.fillStyle = "yellow";
+    ctx2.beginPath();
+    ctx2.arc(bird.x, bird.y, bird.r, 0, Math.PI*2);
+    ctx2.fill();
+    ctx2.fillStyle = "green";
+    pipes.forEach(p => {
+      ctx2.fillRect(p.x, 0, 40, p.top);
+      ctx2.fillRect(p.x, p.bottom, 40, 450-p.bottom);
+      p.x -= 2;
+      if (bird.x > p.x+40 && !p.scored) { flappyScore++; p.scored = true; }
+      if (bird.x + bird.r > p.x && bird.x - bird.r < p.x+40 &&
+          (bird.y - bird.r < p.top || bird.y + bird.r > p.bottom)) {
+        bird.y = 200; bird.velocity = 0; pipes = []; flappyScore = 0;
+      }
+    });
+    if (bird.y > 450 || bird.y < 0) { bird.y = 200; bird.velocity=0; pipes=[]; flappyScore=0; }
+    document.getElementById("flappyScore").textContent = "Score: " + flappyScore;
   }
+  setInterval(drawFlappy, 30);
+  setInterval(spawnPipe, 2500);
+  window.addEventListener("keydown", e => {
+    if (e.code === "Space") bird.velocity = -8;
+  });
 
-  function updatePingPong() {
-    // Use Arrow Keys instead of W/S
-    if (pingPong.keys['ArrowUp']) pingPong.leftPaddle.y -= pingPong.leftPaddle.speed;
-    if (pingPong.keys['ArrowDown']) pingPong.leftPaddle.y += pingPong.leftPaddle.speed;
-    pingPong.leftPaddle.y = Math.max(0, Math.min(pingPong.height - pingPong.paddleHeight, pingPong.leftPaddle.y));
+  /* ===== Ping Pong ===== */
+  const pong = document.getElementById("pingPong");
+  const ctx3 = pong.getContext("2d");
+  let ball = { x: 300, y: 225, vx: 3, vy: 2, r: 8 };
+  let paddle = { x: 280, y: 430, w: 80, h: 10 };
+  let pongScore = 0;
 
-    const aiCenter = pingPong.rightPaddle.y + pingPong.paddleHeight / 2;
-    const deltaY = pingPong.ball.y - aiCenter;
-    if (pingPong.ball.velocityX > 0) {
-      pingPong.rightPaddle.y += deltaY * 0.15;
-    }
-    pingPong.rightPaddle.y = Math.max(0, Math.min(pingPong.height - pingPong.paddleHeight, pingPong.rightPaddle.y));
-
-    pingPong.ball.x += pingPong.ball.velocityX;
-    pingPong.ball.y += pingPong.ball.velocityY;
-
-    if (pingPong.ball.y + pingPong.ballRadius > pingPong.height || pingPong.ball.y - pingPong.ballRadius < 0) {
-      pingPong.ball.velocityY *= -1;
-    }
-
-    // Collision with player
-    if (
-      pingPong.ball.x - pingPong.ballRadius < pingPong.leftPaddle.x + pingPong.paddleWidth &&
-      pingPong.ball.y > pingPong.leftPaddle.y &&
-      pingPong.ball.y < pingPong.leftPaddle.y + pingPong.paddleHeight
-    ) {
-      pingPong.ball.velocityX *= -1;
-      pingPong.ball.x = pingPong.leftPaddle.x + pingPong.paddleWidth + pingPong.ballRadius;
-    }
-
-    // Collision with AI
-    if (
-      pingPong.ball.x + pingPong.ballRadius > pingPong.rightPaddle.x &&
-      pingPong.ball.y > pingPong.rightPaddle.y &&
-      pingPong.ball.y < pingPong.rightPaddle.y + pingPong.paddleHeight
-    ) {
-      pingPong.ball.velocityX *= -1;
-      pingPong.ball.x = pingPong.rightPaddle.x - pingPong.ballRadius;
-    }
-
-    // Score
-    if (pingPong.ball.x < 0) {
-      pingPong.aiScore++;
-      resetPingPong();
-    } else if (pingPong.ball.x > pingPong.width) {
-      pingPong.playerScore++;
-      resetPingPong();
-    }
+  function drawPong() {
+    ctx3.clearRect(0,0,600,450);
+    ctx3.fillStyle = "white";
+    ctx3.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
+    ctx3.beginPath();
+    ctx3.arc(ball.x, ball.y, ball.r, 0, Math.PI*2);
+    ctx3.fill();
+    ball.x += ball.vx;
+    ball.y += ball.vy;
+    if (ball.x < 0 || ball.x > 600) ball.vx *= -1;
+    if (ball.y < 0) ball.vy *= -1;
+    if (ball.y > 450) { ball.x=300; ball.y=225; pongScore = 0; }
+    if (ball.x > paddle.x && ball.x < paddle.x+paddle.w &&
+        ball.y+ball.r > paddle.y) { ball.vy *= -1; pongScore++; }
+    document.getElementById("pongScore").textContent = "Score: " + pongScore;
   }
-
-  function resetPingPong() {
-    pingPong.ball.x = pingPong.width / 2;
-    pingPong.ball.y = pingPong.height / 2;
-    pingPong.ball.velocityX *= -1;
-    pingPong.ball.velocityY = 4 * (Math.random() > 0.5 ? 1 : -1);
-    pingPong.leftPaddle.y = pingPong.height / 2 - pingPong.paddleHeight / 2;
-    pingPong.rightPaddle.y = pingPong.height / 2 - pingPong.paddleHeight / 2;
-  }
-
-  function pingPongLoop() {
-    updatePingPong();
-    drawPingPong();
-    requestAnimationFrame(pingPongLoop);
-  }
-
-  window.addEventListener('keydown', e => pingPong.keys[e.key] = true);
-  window.addEventListener('keyup', e => pingPong.keys[e.key] = false);
-  pingPongLoop();
+  setInterval(drawPong, 30);
+  window.addEventListener("mousemove", e => {
+    const rect = pong.getBoundingClientRect();
+    paddle.x = e.clientX - rect.left - paddle.w/2;
+  });
 </script>
 </body>
 </html>
