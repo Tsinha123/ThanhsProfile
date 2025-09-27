@@ -162,7 +162,7 @@
       font-size: 16px;
       cursor: pointer;
     }
-    #countdown {
+    #countdown, #pongCountdown {
       font-size: 48px;
       font-weight: bold;
       color: yellow;
@@ -185,6 +185,7 @@
   </div>
 
   <main>
+    <!-- ===== Crossy Road ===== -->
     <section id="crossySection">
       <h3 class="game-title">Crossy Road</h3>
       <div class="controls">Controls: ↑ Move Up | ↓ Move Down | ← Move Left | → Move Right</div>
@@ -197,11 +198,18 @@
       <div id="countdown" class="overlay" style="display:none;"></div>
     </section>
 
-    <section>
+    <!-- ===== Ping Pong ===== -->
+    <section id="pongSection">
       <h3 class="game-title">Ping Pong</h3>
       <div class="controls">Controls: Move mouse up/down to control paddle</div>
       <div class="score" id="pongScore">Player: 0 | Opponent: 0</div>
       <canvas id="pingPong" width="600" height="450"></canvas>
+      <div id="pongOverlay" class="overlay" style="display:none;">
+        <div id="pongWinner"></div>
+        <div>Game Over!</div>
+        <button onclick="startPongCountdown()">Restart</button>
+      </div>
+      <div id="pongCountdown" class="overlay" style="display:none;"></div>
     </section>
   </main>
 
@@ -245,8 +253,7 @@
     });
 
     for (let i = 0; i < firstDay; i++) {
-      const empty = document.createElement("div");
-      calendarDays.appendChild(empty);
+      calendarDays.appendChild(document.createElement("div"));
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
@@ -258,7 +265,6 @@
       if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
         div.classList.add("today");
       }
-
       if (selectedDay && selectedDay.day === day && selectedDay.month === month && selectedDay.year === year) {
         div.classList.add("selected");
       }
@@ -377,12 +383,24 @@
   const pongCanvas = document.getElementById("pingPong");
   const ctxP = pongCanvas.getContext("2d");
   const pongScoreEl = document.getElementById("pongScore");
+  const pongOverlay = document.getElementById("pongOverlay");
+  const pongCountdownEl = document.getElementById("pongCountdown");
+  const pongWinnerEl = document.getElementById("pongWinner");
 
-  let player = { x: 10, y: 200, width: 10, height: 100, color: "lime", score: 0 };
-  let ai = { x: 580, y: 200, width: 10, height: 100, color: "red", score: 0 };
-  let ball = { x: 300, y: 225, size: 10, speedX: 4, speedY: 4, color: "white" };
+  let player, ai, ball, pongGameOver;
+
+  function initPong() {
+    player = { x: 10, y: 200, width: 10, height: 100, color: "lime", score: 0 };
+    ai = { x: 580, y: 200, width: 10, height: 100, color: "red", score: 0 };
+    ball = { x: 300, y: 225, size: 10, speedX: 4, speedY: 4, color: "white" };
+    pongGameOver = false;
+    pongOverlay.style.display = "none";
+    pongCountdownEl.style.display = "none";
+    requestAnimationFrame(pongLoop);
+  }
 
   function pongLoop() {
+    if (pongGameOver) return;
     ctxP.clearRect(0, 0, 600, 450);
 
     ctxP.fillStyle = player.color;
@@ -420,7 +438,13 @@
 
     pongScoreEl.textContent = `Player: ${player.score} | Opponent: ${ai.score}`;
 
-    requestAnimationFrame(pongLoop);
+    if (player.score >= 10 || ai.score >= 10) {
+      pongGameOver = true;
+      pongWinnerEl.textContent = player.score >= 10 ? "Player Wins!" : "Opponent Wins!";
+      pongOverlay.style.display = "flex";
+    } else {
+      requestAnimationFrame(pongLoop);
+    }
   }
 
   function resetBall() {
@@ -428,12 +452,29 @@
     ball.speedX *= -1;
   }
 
+  function startPongCountdown() {
+    pongOverlay.style.display = "none";
+    pongCountdownEl.style.display = "flex";
+    let count = 3;
+    pongCountdownEl.textContent = count;
+    let interval = setInterval(() => {
+      count--;
+      if (count > 0) {
+        pongCountdownEl.textContent = count;
+      } else {
+        clearInterval(interval);
+        pongCountdownEl.style.display = "none";
+        initPong();
+      }
+    }, 1000);
+  }
+
   pongCanvas.addEventListener("mousemove", e => {
     const rect = pongCanvas.getBoundingClientRect();
     player.y = e.clientY - rect.top - player.height/2;
   });
 
-  pongLoop();
+  initPong();
 </script>
 </body>
 </html>
