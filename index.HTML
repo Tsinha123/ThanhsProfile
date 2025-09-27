@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Thanh's Profile</title>
   <style>
-    /* Reset and base styles */
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -35,18 +34,18 @@
       grid-column: 1 / 4;
       overflow-y: auto;
       padding: 20px;
-      background: #cce7ff; /* light blue background */
+      background: #f5f5dc; /* Tanish background */
       display: flex;
-      flex-direction: column;  /* stack vertically */
+      flex-direction: column;
       gap: 30px;
-      align-items: center;     /* center horizontally */
+      align-items: center;
     }
     section {
       background: #fafafa;
       border-radius: 8px;
       padding: 15px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      width: 640px; /* slightly wider than canvas */
+      width: 640px;
     }
     .game-title {
       color: #333;
@@ -87,7 +86,7 @@
   </main>
 
 <script>
-  /* ===== Crossy Road Clone (simple) ===== */
+  /* ===== Crossy Road Clone ===== */
   const crossyCanvas = document.getElementById('crossyRoad');
   const crossyCtx = crossyCanvas.getContext('2d');
 
@@ -104,7 +103,6 @@
     keys: {}
   };
 
-  // Initialize cars in lanes
   crossy.lanes.forEach(lane => {
     for (let i = 0; i < 4; i++) {
       lane.cars.push({
@@ -117,28 +115,21 @@
 
   function drawCrossy() {
     crossyCtx.clearRect(0, 0, crossy.width, crossy.height);
-
-    // Draw lanes
     crossyCtx.fillStyle = '#555';
     crossy.lanes.forEach(lane => {
       crossyCtx.fillRect(0, lane.y, crossy.width, 40);
     });
-
-    // Draw cars
     crossyCtx.fillStyle = 'red';
     crossy.lanes.forEach(lane => {
       lane.cars.forEach(car => {
         crossyCtx.fillRect(car.x, lane.y + 5, car.width, 30);
       });
     });
-
-    // Draw player (square)
     crossyCtx.fillStyle = 'lime';
     crossyCtx.fillRect(crossy.player.x, crossy.player.y, crossy.player.size, crossy.player.size);
   }
 
   function updateCrossy() {
-    // Move cars
     crossy.lanes.forEach(lane => {
       lane.cars.forEach(car => {
         car.x += lane.speed;
@@ -147,25 +138,14 @@
       });
     });
 
-    // Player movement
-    if (crossy.keys['ArrowUp']) {
-      crossy.player.y -= 5;
-      if (crossy.player.y < 0) crossy.player.y = 0;
-    }
-    if (crossy.keys['ArrowDown']) {
-      crossy.player.y += 5;
-      if (crossy.player.y > crossy.height - crossy.player.size) crossy.player.y = crossy.height - crossy.player.size;
-    }
-    if (crossy.keys['ArrowLeft']) {
-      crossy.player.x -= 5;
-      if (crossy.player.x < 0) crossy.player.x = 0;
-    }
-    if (crossy.keys['ArrowRight']) {
-      crossy.player.x += 5;
-      if (crossy.player.x > crossy.width - crossy.player.size) crossy.player.x = crossy.width - crossy.player.size;
-    }
+    if (crossy.keys['ArrowUp']) crossy.player.y -= 5;
+    if (crossy.keys['ArrowDown']) crossy.player.y += 5;
+    if (crossy.keys['ArrowLeft']) crossy.player.x -= 5;
+    if (crossy.keys['ArrowRight']) crossy.player.x += 5;
 
-    // Collision detection
+    crossy.player.x = Math.max(0, Math.min(crossy.width - crossy.player.size, crossy.player.x));
+    crossy.player.y = Math.max(0, Math.min(crossy.height - crossy.player.size, crossy.player.y));
+
     for (let lane of crossy.lanes) {
       for (let car of lane.cars) {
         if (
@@ -174,7 +154,6 @@
           crossy.player.y < lane.y + 40 &&
           crossy.player.y + crossy.player.size > lane.y
         ) {
-          // Collision detected, reset player
           crossy.player.x = 280;
           crossy.player.y = 410;
         }
@@ -188,15 +167,9 @@
     requestAnimationFrame(crossyLoop);
   }
 
-  window.addEventListener('keydown', e => {
-    crossy.keys[e.key] = true;
-  });
-  window.addEventListener('keyup', e => {
-    crossy.keys[e.key] = false;
-  });
-
+  window.addEventListener('keydown', e => crossy.keys[e.key] = true);
+  window.addEventListener('keyup', e => crossy.keys[e.key] = false);
   crossyLoop();
-
 
   /* ===== Flappy Bird Clone ===== */
   const flappyCanvas = document.getElementById('flappyBird');
@@ -229,22 +202,17 @@
   function drawFlappy() {
     flappyCtx.clearRect(0, 0, flappy.width, flappy.height);
 
-    // Draw bird
     flappyCtx.fillStyle = 'yellow';
     flappyCtx.beginPath();
     flappyCtx.arc(flappy.bird.x, flappy.bird.y, flappy.bird.radius, 0, Math.PI * 2);
     flappyCtx.fill();
 
-    // Draw pipes
     flappyCtx.fillStyle = 'green';
     flappy.pipes.forEach(pipe => {
-      // Top pipe
       flappyCtx.fillRect(pipe.x, 0, flappy.pipeWidth, pipe.topHeight);
-      // Bottom pipe
       flappyCtx.fillRect(pipe.x, pipe.bottomY, flappy.pipeWidth, pipe.bottomHeight);
     });
 
-    // Draw score
     flappyCtx.fillStyle = '#222';
     flappyCtx.font = '24px Arial';
     flappyCtx.fillText(`Score: ${flappy.score}`, 15, 35);
@@ -264,48 +232,34 @@
     flappy.bird.velocity += flappy.gravity;
     flappy.bird.y += flappy.bird.velocity;
 
-    if (flappy.bird.y + flappy.bird.radius > flappy.height || flappy.bird.y - flappy.bird.radius < 0) {
-      flappy.gameOver = true;
-    }
+    if (flappy.frameCount % 90 === 0) createPipe();
 
-    // Add pipes every 90 frames (~1.5 sec at 60fps)
-    flappy.frameCount++;
-    if (flappy.frameCount % 90 === 0) {
-      createPipe();
-    }
+    flappy.pipes.forEach(pipe => {
+      pipe.x -= 3;
 
-    // Move pipes and check collisions
-    for (let i = flappy.pipes.length - 1; i >= 0; i--) {
-      const pipe = flappy.pipes[i];
-      pipe.x -= 4;
+      if (pipe.x + flappy.pipeWidth === flappy.bird.x) {
+        flappy.score++;
+      }
 
-      // Collision with bird
       if (
         flappy.bird.x + flappy.bird.radius > pipe.x &&
         flappy.bird.x - flappy.bird.radius < pipe.x + flappy.pipeWidth &&
-        (flappy.bird.y - flappy.bird.radius < pipe.topHeight ||
-          flappy.bird.y + flappy.bird.radius > pipe.bottomY)
+        (
+          flappy.bird.y - flappy.bird.radius < pipe.topHeight ||
+          flappy.bird.y + flappy.bird.radius > pipe.bottomY
+        )
       ) {
         flappy.gameOver = true;
       }
+    });
 
-      // Passed pipe
-      if (pipe.x + flappy.pipeWidth < flappy.bird.x && !pipe.passed) {
-        flappy.score++;
-        pipe.passed = true;
-      }
+    flappy.pipes = flappy.pipes.filter(pipe => pipe.x + flappy.pipeWidth > 0);
 
-      // Remove offscreen pipes
-      if (pipe.x + flappy.pipeWidth < 0) {
-        flappy.pipes.splice(i, 1);
-      }
+    if (flappy.bird.y + flappy.bird.radius > flappy.height || flappy.bird.y < 0) {
+      flappy.gameOver = true;
     }
-  }
 
-  function flappyLoop() {
-    updateFlappy();
-    drawFlappy();
-    requestAnimationFrame(flappyLoop);
+    flappy.frameCount++;
   }
 
   flappyCanvas.addEventListener('click', () => {
@@ -313,18 +267,22 @@
       flappy.bird.y = 225;
       flappy.bird.velocity = 0;
       flappy.pipes = [];
-      flappy.score = 0;
       flappy.frameCount = 0;
+      flappy.score = 0;
       flappy.gameOver = false;
     } else {
       flappy.bird.velocity = flappy.lift;
     }
   });
 
+  function flappyLoop() {
+    updateFlappy();
+    drawFlappy();
+    requestAnimationFrame(flappyLoop);
+  }
   flappyLoop();
 
-
-  /* ===== Ping Pong ===== */
+  /* ===== Ping Pong with Arrow Keys ===== */
   const pingPongCanvas = document.getElementById('pingPong');
   const ppCtx = pingPongCanvas.getContext('2d');
 
@@ -345,7 +303,6 @@
   function drawPingPong() {
     ppCtx.clearRect(0, 0, pingPong.width, pingPong.height);
 
-    // Draw middle line
     ppCtx.strokeStyle = '#f06';
     ppCtx.lineWidth = 3;
     ppCtx.setLineDash([15, 10]);
@@ -355,18 +312,15 @@
     ppCtx.stroke();
     ppCtx.setLineDash([]);
 
-    // Draw paddles
     ppCtx.fillStyle = 'lime';
     ppCtx.fillRect(pingPong.leftPaddle.x, pingPong.leftPaddle.y, pingPong.paddleWidth, pingPong.paddleHeight);
     ppCtx.fillRect(pingPong.rightPaddle.x, pingPong.rightPaddle.y, pingPong.paddleWidth, pingPong.paddleHeight);
 
-    // Draw ball
     ppCtx.fillStyle = 'white';
     ppCtx.beginPath();
     ppCtx.arc(pingPong.ball.x, pingPong.ball.y, pingPong.ballRadius, 0, Math.PI * 2);
     ppCtx.fill();
 
-    // Draw scores
     ppCtx.fillStyle = '#222';
     ppCtx.font = '24px Arial';
     ppCtx.fillText(pingPong.playerScore, pingPong.width / 4, 40);
@@ -374,53 +328,46 @@
   }
 
   function updatePingPong() {
-    // Player paddle movement
-    if (pingPong.keys['w'] && pingPong.leftPaddle.y > 0) {
-      pingPong.leftPaddle.y -= pingPong.leftPaddle.speed;
-    }
-    if (pingPong.keys['s'] && pingPong.leftPaddle.y + pingPong.paddleHeight < pingPong.height) {
-      pingPong.leftPaddle.y += pingPong.leftPaddle.speed;
-    }
+    // Use Arrow Keys instead of W/S
+    if (pingPong.keys['ArrowUp']) pingPong.leftPaddle.y -= pingPong.leftPaddle.speed;
+    if (pingPong.keys['ArrowDown']) pingPong.leftPaddle.y += pingPong.leftPaddle.speed;
+    pingPong.leftPaddle.y = Math.max(0, Math.min(pingPong.height - pingPong.paddleHeight, pingPong.leftPaddle.y));
 
-    // AI paddle movement - simple AI
-    if (pingPong.ball.y < pingPong.rightPaddle.y + pingPong.paddleHeight / 2) {
-      pingPong.rightPaddle.y -= pingPong.rightPaddle.speed;
-    } else {
-      pingPong.rightPaddle.y += pingPong.rightPaddle.speed;
+    const aiCenter = pingPong.rightPaddle.y + pingPong.paddleHeight / 2;
+    const deltaY = pingPong.ball.y - aiCenter;
+    if (pingPong.ball.velocityX > 0) {
+      pingPong.rightPaddle.y += deltaY * 0.15;
     }
-    // Keep AI paddle in bounds
-    if (pingPong.rightPaddle.y < 0) pingPong.rightPaddle.y = 0;
-    if (pingPong.rightPaddle.y + pingPong.paddleHeight > pingPong.height) pingPong.rightPaddle.y = pingPong.height - pingPong.paddleHeight;
+    pingPong.rightPaddle.y = Math.max(0, Math.min(pingPong.height - pingPong.paddleHeight, pingPong.rightPaddle.y));
 
-    // Move ball
     pingPong.ball.x += pingPong.ball.velocityX;
     pingPong.ball.y += pingPong.ball.velocityY;
 
-    // Ball collision with top/bottom walls
     if (pingPong.ball.y + pingPong.ballRadius > pingPong.height || pingPong.ball.y - pingPong.ballRadius < 0) {
-      pingPong.ball.velocityY = -pingPong.ball.velocityY;
+      pingPong.ball.velocityY *= -1;
     }
 
-    // Ball collision with paddles
+    // Collision with player
     if (
       pingPong.ball.x - pingPong.ballRadius < pingPong.leftPaddle.x + pingPong.paddleWidth &&
       pingPong.ball.y > pingPong.leftPaddle.y &&
       pingPong.ball.y < pingPong.leftPaddle.y + pingPong.paddleHeight
     ) {
-      pingPong.ball.velocityX = -pingPong.ball.velocityX;
+      pingPong.ball.velocityX *= -1;
       pingPong.ball.x = pingPong.leftPaddle.x + pingPong.paddleWidth + pingPong.ballRadius;
     }
 
+    // Collision with AI
     if (
       pingPong.ball.x + pingPong.ballRadius > pingPong.rightPaddle.x &&
       pingPong.ball.y > pingPong.rightPaddle.y &&
       pingPong.ball.y < pingPong.rightPaddle.y + pingPong.paddleHeight
     ) {
-      pingPong.ball.velocityX = -pingPong.ball.velocityX;
+      pingPong.ball.velocityX *= -1;
       pingPong.ball.x = pingPong.rightPaddle.x - pingPong.ballRadius;
     }
 
-    // Score update
+    // Score
     if (pingPong.ball.x < 0) {
       pingPong.aiScore++;
       resetPingPong();
@@ -433,7 +380,7 @@
   function resetPingPong() {
     pingPong.ball.x = pingPong.width / 2;
     pingPong.ball.y = pingPong.height / 2;
-    pingPong.ball.velocityX = -pingPong.ball.velocityX;
+    pingPong.ball.velocityX *= -1;
     pingPong.ball.velocityY = 4 * (Math.random() > 0.5 ? 1 : -1);
     pingPong.leftPaddle.y = pingPong.height / 2 - pingPong.paddleHeight / 2;
     pingPong.rightPaddle.y = pingPong.height / 2 - pingPong.paddleHeight / 2;
@@ -445,13 +392,8 @@
     requestAnimationFrame(pingPongLoop);
   }
 
-  window.addEventListener('keydown', e => {
-    pingPong.keys[e.key.toLowerCase()] = true;
-  });
-  window.addEventListener('keyup', e => {
-    pingPong.keys[e.key.toLowerCase()] = false;
-  });
-
+  window.addEventListener('keydown', e => pingPong.keys[e.key] = true);
+  window.addEventListener('keyup', e => pingPong.keys[e.key] = false);
   pingPongLoop();
 </script>
 </body>
