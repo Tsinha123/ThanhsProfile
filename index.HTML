@@ -78,9 +78,7 @@
       cursor: pointer;
       font-size: 14px;
     }
-    .calendar-day:hover {
-      background: #f9d3e4;
-    }
+    .calendar-day:hover { background: #f9d3e4; }
     .calendar-day.today {
       background: #f06;
       color: white;
@@ -110,6 +108,7 @@
       padding: 15px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       width: 640px;
+      position: relative;
     }
     .game-title {
       color: #333;
@@ -132,6 +131,42 @@
       margin: 8px 0;
       color: #444;
     }
+    .controls {
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: #555;
+    }
+    /* Overlay */
+    .overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      border-radius: 8px;
+    }
+    .overlay button {
+      padding: 8px 16px;
+      background: #f06;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #countdown {
+      font-size: 48px;
+      font-weight: bold;
+      color: yellow;
+    }
   </style>
 </head>
 <body>
@@ -150,21 +185,22 @@
   </div>
 
   <main>
-    <section>
+    <section id="crossySection">
       <h3 class="game-title">Crossy Road</h3>
+      <div class="controls">Controls: ↑ Move Up | ↓ Move Down | ← Move Left | → Move Right</div>
       <div class="score" id="crossyScore">Score: 0</div>
       <canvas id="crossyRoad" width="600" height="450"></canvas>
-    </section>
-
-    <section>
-      <h3 class="game-title">Flappy Bird</h3>
-      <div class="score" id="flappyScore">Score: 0</div>
-      <canvas id="flappyBird" width="600" height="450"></canvas>
+      <div id="crossyOverlay" class="overlay" style="display:none;">
+        <div>Game Over!</div>
+        <button onclick="startCountdown()">Restart</button>
+      </div>
+      <div id="countdown" class="overlay" style="display:none;"></div>
     </section>
 
     <section>
       <h3 class="game-title">Ping Pong</h3>
-      <div class="score" id="pongScore">Score: 0</div>
+      <div class="controls">Controls: Move mouse up/down to control paddle</div>
+      <div class="score" id="pongScore">Player: 0 | Opponent: 0</div>
       <canvas id="pingPong" width="600" height="450"></canvas>
     </section>
   </main>
@@ -200,7 +236,6 @@
     const monthName = date.toLocaleString("default", { month: "long" });
     calendarMonth.textContent = `${monthName} ${year}`;
 
-    // Day names
     const dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
     dayNames.forEach(day => {
       const div = document.createElement("div");
@@ -209,13 +244,11 @@
       calendarDays.appendChild(div);
     });
 
-    // Empty cells
     for (let i = 0; i < firstDay; i++) {
       const empty = document.createElement("div");
       calendarDays.appendChild(empty);
     }
 
-    // Days
     for (let day = 1; day <= daysInMonth; day++) {
       const div = document.createElement("div");
       div.textContent = day;
@@ -249,108 +282,158 @@
   renderCalendar(currentDate);
 
   /* ===== Crossy Road ===== */
-  const crossy = document.getElementById("crossyRoad");
-  const ctx1 = crossy.getContext("2d");
-  let player = { x: 280, y: 400, size: 20 };
-  let cars = [];
-  let crossyScore = 0;
+  const crossyCanvas = document.getElementById("crossyRoad");
+  const ctxC = crossyCanvas.getContext("2d");
+  const crossyScoreEl = document.getElementById("crossyScore");
+  const crossyOverlay = document.getElementById("crossyOverlay");
+  const countdownEl = document.getElementById("countdown");
 
-  function spawnCar() {
-    cars.push({ x: Math.random() * 600, y: 0, w: 40, h: 20, speed: 2 + Math.random() * 3 });
+  let crossyPlayer, cars, score, gameOver;
+
+  function initCrossy() {
+    crossyPlayer = { x: 280, y: 400, size: 20, color: "lime" };
+    cars = [];
+    score = 0;
+    gameOver = false;
+    crossyOverlay.style.display = "none";
+    countdownEl.style.display = "none";
+    spawnCars();
+    requestAnimationFrame(crossyLoop);
   }
-  function drawCrossy() {
-    ctx1.clearRect(0,0,600,450);
-    ctx1.fillStyle = "lime";
-    ctx1.fillRect(player.x, player.y, player.size, player.size);
-    ctx1.fillStyle = "red";
-    cars.forEach(c => {
-      ctx1.fillRect(c.x, c.y, c.w, c.h);
-      c.y += c.speed;
-      if (c.y > 450) { c.y = -20; c.x = Math.random()*560; crossyScore++; }
-      if (player.x < c.x + c.w && player.x + player.size > c.x &&
-          player.y < c.y + c.h && player.y + player.size > c.y) {
-        player.y = 400; crossyScore = 0;
+
+  function spawnCars() {
+    for (let i = 0; i < 5; i++) {
+      cars.push({
+        x: Math.random() * 600,
+        y: i * 90 + 40,
+        width: 50,
+        height: 20,
+        speed: 2 + Math.random() * 3,
+        color: "red"
+      });
+    }
+  }
+
+  function crossyLoop() {
+    if (gameOver) return;
+    ctxC.clearRect(0, 0, 600, 450);
+
+    ctxC.fillStyle = crossyPlayer.color;
+    ctxC.fillRect(crossyPlayer.x, crossyPlayer.y, crossyPlayer.size, crossyPlayer.size);
+
+    cars.forEach(car => {
+      car.x += car.speed;
+      if (car.x > 600) car.x = -car.width;
+      ctxC.fillStyle = car.color;
+      ctxC.fillRect(car.x, car.y, car.width, car.height);
+
+      if (crossyPlayer.x < car.x + car.width &&
+          crossyPlayer.x + crossyPlayer.size > car.x &&
+          crossyPlayer.y < car.y + car.height &&
+          crossyPlayer.y + crossyPlayer.size > car.y) {
+        gameOver = true;
+        crossyOverlay.style.display = "flex";
       }
     });
-    document.getElementById("crossyScore").textContent = "Score: " + crossyScore;
-  }
-  setInterval(drawCrossy, 30);
-  setInterval(spawnCar, 2000);
-  window.addEventListener("keydown", e => {
-    if (e.key === "ArrowUp") player.y -= 20;
-    if (e.key === "ArrowDown") player.y += 20;
-    if (e.key === "ArrowLeft") player.x -= 20;
-    if (e.key === "ArrowRight") player.x += 20;
-  });
 
-  /* ===== Flappy Bird ===== */
-  const flappy = document.getElementById("flappyBird");
-  const ctx2 = flappy.getContext("2d");
-  let bird = { x: 100, y: 200, r: 15, velocity: 0 };
-  let pipes = [];
-  let flappyScore = 0;
+    if (crossyPlayer.y < 10) {
+      score++;
+      crossyPlayer.y = 400;
+    }
+    crossyScoreEl.textContent = "Score: " + score;
 
-  function spawnPipe() {
-    const gap = 120;
-    const top = Math.random() * 200 + 50;
-    pipes.push({ x: 600, top, bottom: top + gap });
+    requestAnimationFrame(crossyLoop);
   }
-  function drawFlappy() {
-    ctx2.clearRect(0,0,600,450);
-    bird.velocity += 0.5;
-    bird.y += bird.velocity;
-    ctx2.fillStyle = "yellow";
-    ctx2.beginPath();
-    ctx2.arc(bird.x, bird.y, bird.r, 0, Math.PI*2);
-    ctx2.fill();
-    ctx2.fillStyle = "green";
-    pipes.forEach(p => {
-      ctx2.fillRect(p.x, 0, 40, p.top);
-      ctx2.fillRect(p.x, p.bottom, 40, 450-p.bottom);
-      p.x -= 2;
-      if (bird.x > p.x+40 && !p.scored) { flappyScore++; p.scored = true; }
-      if (bird.x + bird.r > p.x && bird.x - bird.r < p.x+40 &&
-          (bird.y - bird.r < p.top || bird.y + bird.r > p.bottom)) {
-        bird.y = 200; bird.velocity = 0; pipes = []; flappyScore = 0;
+
+  function startCountdown() {
+    crossyOverlay.style.display = "none";
+    countdownEl.style.display = "flex";
+    let count = 3;
+    countdownEl.textContent = count;
+    let interval = setInterval(() => {
+      count--;
+      if (count > 0) {
+        countdownEl.textContent = count;
+      } else {
+        clearInterval(interval);
+        countdownEl.style.display = "none";
+        initCrossy();
       }
-    });
-    if (bird.y > 450 || bird.y < 0) { bird.y = 200; bird.velocity=0; pipes=[]; flappyScore=0; }
-    document.getElementById("flappyScore").textContent = "Score: " + flappyScore;
+    }, 1000);
   }
-  setInterval(drawFlappy, 30);
-  setInterval(spawnPipe, 2500);
+
   window.addEventListener("keydown", e => {
-    if (e.code === "Space") bird.velocity = -8;
+    if (gameOver) return;
+    const step = 20;
+    if (e.key === "ArrowUp") crossyPlayer.y -= step;
+    if (e.key === "ArrowDown") crossyPlayer.y += step;
+    if (e.key === "ArrowLeft") crossyPlayer.x -= step;
+    if (e.key === "ArrowRight") crossyPlayer.x += step;
   });
+
+  initCrossy();
 
   /* ===== Ping Pong ===== */
-  const pong = document.getElementById("pingPong");
-  const ctx3 = pong.getContext("2d");
-  let ball = { x: 300, y: 225, vx: 3, vy: 2, r: 8 };
-  let paddle = { x: 280, y: 430, w: 80, h: 10 };
-  let pongScore = 0;
+  const pongCanvas = document.getElementById("pingPong");
+  const ctxP = pongCanvas.getContext("2d");
+  const pongScoreEl = document.getElementById("pongScore");
 
-  function drawPong() {
-    ctx3.clearRect(0,0,600,450);
-    ctx3.fillStyle = "white";
-    ctx3.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
-    ctx3.beginPath();
-    ctx3.arc(ball.x, ball.y, ball.r, 0, Math.PI*2);
-    ctx3.fill();
-    ball.x += ball.vx;
-    ball.y += ball.vy;
-    if (ball.x < 0 || ball.x > 600) ball.vx *= -1;
-    if (ball.y < 0) ball.vy *= -1;
-    if (ball.y > 450) { ball.x=300; ball.y=225; pongScore = 0; }
-    if (ball.x > paddle.x && ball.x < paddle.x+paddle.w &&
-        ball.y+ball.r > paddle.y) { ball.vy *= -1; pongScore++; }
-    document.getElementById("pongScore").textContent = "Score: " + pongScore;
+  let player = { x: 10, y: 200, width: 10, height: 100, color: "lime", score: 0 };
+  let ai = { x: 580, y: 200, width: 10, height: 100, color: "red", score: 0 };
+  let ball = { x: 300, y: 225, size: 10, speedX: 4, speedY: 4, color: "white" };
+
+  function pongLoop() {
+    ctxP.clearRect(0, 0, 600, 450);
+
+    ctxP.fillStyle = player.color;
+    ctxP.fillRect(player.x, player.y, player.width, player.height);
+    ctxP.fillStyle = ai.color;
+    ctxP.fillRect(ai.x, ai.y, ai.width, ai.height);
+
+    ctxP.fillStyle = ball.color;
+    ctxP.fillRect(ball.x, ball.y, ball.size, ball.size);
+
+    ball.x += ball.speedX;
+    ball.y += ball.speedY;
+
+    if (ball.y <= 0 || ball.y + ball.size >= 450) ball.speedY *= -1;
+
+    if (ball.x <= player.x + player.width &&
+        ball.y + ball.size >= player.y &&
+        ball.y <= player.y + player.height) {
+      ball.speedX *= -1;
+      ball.x = player.x + player.width;
+    }
+
+    if (ball.x + ball.size >= ai.x &&
+        ball.y + ball.size >= ai.y &&
+        ball.y <= ai.y + ai.height) {
+      ball.speedX *= -1;
+      ball.x = ai.x - ball.size;
+    }
+
+    if (ball.x < 0) { ai.score++; resetBall(); }
+    if (ball.x > 600) { player.score++; resetBall(); }
+
+    if (ai.y + ai.height/2 < ball.y) ai.y += 3;
+    else ai.y -= 3;
+
+    pongScoreEl.textContent = `Player: ${player.score} | Opponent: ${ai.score}`;
+
+    requestAnimationFrame(pongLoop);
   }
-  setInterval(drawPong, 30);
-  window.addEventListener("mousemove", e => {
-    const rect = pong.getBoundingClientRect();
-    paddle.x = e.clientX - rect.left - paddle.w/2;
+
+  function resetBall() {
+    ball.x = 300; ball.y = 225;
+    ball.speedX *= -1;
+  }
+
+  pongCanvas.addEventListener("mousemove", e => {
+    const rect = pongCanvas.getBoundingClientRect();
+    player.y = e.clientY - rect.top - player.height/2;
   });
+
+  pongLoop();
 </script>
 </body>
 </html>
