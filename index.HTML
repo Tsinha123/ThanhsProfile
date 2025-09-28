@@ -137,7 +137,6 @@
       margin-bottom: 8px;
       color: #555;
     }
-    /* Overlay */
     .overlay {
       position: absolute;
       top: 0; left: 0;
@@ -201,7 +200,7 @@
     <!-- ===== Ping Pong ===== -->
     <section id="pongSection">
       <h3 class="game-title">Ping Pong</h3>
-      <div class="controls">Controls: Move mouse up/down to control paddle</div>
+      <div class="controls">Controls: Move mouse up/down to control paddle (Play to 10 points)</div>
       <div class="score" id="pongScore">Player: 0 | Opponent: 0</div>
       <canvas id="pingPong" width="600" height="450"></canvas>
       <div id="pongOverlay" class="overlay" style="display:none;">
@@ -401,6 +400,15 @@
 
   function pongLoop() {
     if (pongGameOver) return;
+
+    // check win condition first
+    if (player.score >= 10 || ai.score >= 10) {
+      pongGameOver = true;
+      pongWinnerEl.textContent = player.score >= 10 ? "Player Wins!" : "Opponent Wins!";
+      pongOverlay.style.display = "flex";
+      return; // stop loop
+    }
+
     ctxP.clearRect(0, 0, 600, 450);
 
     ctxP.fillStyle = player.color;
@@ -438,13 +446,7 @@
 
     pongScoreEl.textContent = `Player: ${player.score} | Opponent: ${ai.score}`;
 
-    if (player.score >= 10 || ai.score >= 10) {
-      pongGameOver = true;
-      pongWinnerEl.textContent = player.score >= 10 ? "Player Wins!" : "Opponent Wins!";
-      pongOverlay.style.display = "flex";
-    } else {
-      requestAnimationFrame(pongLoop);
-    }
+    requestAnimationFrame(pongLoop);
   }
 
   function resetBall() {
