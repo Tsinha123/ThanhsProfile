@@ -191,7 +191,7 @@
       <div class="score" id="crossyScore">Score: 0</div>
       <canvas id="crossyRoad" width="600" height="450"></canvas>
       <div id="crossyOverlay" class="overlay" style="display:none;">
-        <div>Game Over!</div>
+        <div id="crossyMessage"></div>
         <button onclick="startCountdown()">Restart</button>
       </div>
       <div id="countdown" class="overlay" style="display:none;"></div>
@@ -292,6 +292,7 @@
   const crossyScoreEl = document.getElementById("crossyScore");
   const crossyOverlay = document.getElementById("crossyOverlay");
   const countdownEl = document.getElementById("countdown");
+  const crossyMessage = document.getElementById("crossyMessage");
 
   let crossyPlayer, cars, score, gameOver;
 
@@ -307,6 +308,7 @@
   }
 
   function spawnCars() {
+    cars = [];
     for (let i = 0; i < 5; i++) {
       cars.push({
         x: Math.random() * 600,
@@ -337,17 +339,23 @@
           crossyPlayer.y < car.y + car.height &&
           crossyPlayer.y + crossyPlayer.size > car.y) {
         gameOver = true;
+        crossyMessage.textContent = "Game Over!";
         crossyOverlay.style.display = "flex";
       }
     });
 
-    if (crossyPlayer.y < 10) {
+    if (!gameOver && crossyPlayer.y < 10) {
       score++;
       crossyPlayer.y = 400;
+      if (score >= 10) {
+        gameOver = true;
+        crossyMessage.textContent = "Player Wins!";
+        crossyOverlay.style.display = "flex";
+      }
     }
     crossyScoreEl.textContent = "Score: " + score;
 
-    requestAnimationFrame(crossyLoop);
+    if (!gameOver) requestAnimationFrame(crossyLoop);
   }
 
   function startCountdown() {
@@ -401,12 +409,11 @@
   function pongLoop() {
     if (pongGameOver) return;
 
-    // check win condition first
     if (player.score >= 10 || ai.score >= 10) {
       pongGameOver = true;
       pongWinnerEl.textContent = player.score >= 10 ? "Player Wins!" : "Opponent Wins!";
       pongOverlay.style.display = "flex";
-      return; // stop loop
+      return;
     }
 
     ctxP.clearRect(0, 0, 600, 450);
