@@ -29,6 +29,18 @@
       grid-column: 1 / 4;
       height: 8px;
       background: linear-gradient(to right, #f06, #f79);
+      position: relative;
+    }
+    .visitor-counter {
+      position: absolute;
+      right: 15px;
+      top: -28px;
+      background: #222;
+      color: white;
+      font-size: 14px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
     }
     .datetime {
       grid-column: 1 / 4;
@@ -170,7 +182,9 @@
 </head>
 <body>
   <header>Thanh's Profile</header>
-  <div class="ribbon"></div>
+  <div class="ribbon">
+    <div class="visitor-counter" id="visitorCounter">Visitors: 0</div>
+  </div>
   <div class="datetime" id="datetime"></div>
 
   <!-- ===== Calendar ===== -->
@@ -213,6 +227,16 @@
   </main>
 
 <script>
+  /* ===== Visitor Counter ===== */
+  function updateVisitorCounter() {
+    let count = localStorage.getItem("visitorCount");
+    if (!count) count = 0;
+    count++;
+    localStorage.setItem("visitorCount", count);
+    document.getElementById("visitorCounter").textContent = "Visitors: " + count;
+  }
+  updateVisitorCounter();
+
   /* ===== Date & Time ===== */
   function updateDateTime() {
     const now = new Date();
