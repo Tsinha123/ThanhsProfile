@@ -309,13 +309,14 @@
 
   function spawnCars() {
     cars = [];
-    for (let i = 0; i < 8; i++) { // more cars
+    // start from 1 instead of 0 → skips bottom lane so it's safe at spawn
+    for (let i = 1; i <= 8; i++) {
       cars.push({
         x: Math.random() * 600,
-        y: i * 60 + 30, // tighter spacing
+        y: i * 60 + 30,
         width: 50,
         height: 20,
-        speed: 3 + Math.random() * 4, // faster cars
+        speed: 3 + Math.random() * 4,
         color: Math.random() > 0.5 ? "red" : "orange"
       });
     }
@@ -348,9 +349,9 @@
       score++;
       crossyPlayer.y = 400;
 
-      // 🚀 Make cars faster each time you score
+      // progressive difficulty
       cars.forEach(car => {
-        car.speed *= 1.15; // +15% speed increase per score
+        car.speed *= 1.15;
       });
 
       if (score >= 10) {
