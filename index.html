@@ -310,7 +310,6 @@
   function spawnCars() {
     cars = [];
     const rainbowColors = ["red", "orange", "yellow", "green", "blue", "indigo", "violet"];
-    // include bottom lane again → 8 cars total
     for (let i = 0; i < 8; i++) {
       cars.push({
         x: Math.random() * 600,
@@ -349,12 +348,7 @@
     if (!gameOver && crossyPlayer.y < 10) {
       score++;
       crossyPlayer.y = 400;
-
-      // progressive difficulty
-      cars.forEach(car => {
-        car.speed *= 1.15;
-      });
-
+      cars.forEach(car => { car.speed *= 1.15; });
       if (score >= 10) {
         gameOver = true;
         crossyMessage.textContent = "Player Wins!";
@@ -394,7 +388,7 @@
 
   initCrossy();
 
-  /* ===== Ping Pong ===== */
+  /* ===== Ping Pong (Harder) ===== */
   const pongCanvas = document.getElementById("pingPong");
   const ctxP = pongCanvas.getContext("2d");
   const pongScoreEl = document.getElementById("pongScore");
@@ -405,9 +399,9 @@
   let player, ai, ball, pongGameOver;
 
   function initPong() {
-    player = { x: 10, y: 200, width: 10, height: 100, color: "lime", score: 0 };
-    ai = { x: 580, y: 200, width: 10, height: 100, color: "red", score: 0 };
-    ball = { x: 300, y: 225, size: 10, speedX: 4, speedY: 4, color: "white" };
+    player = { x: 10, y: 200, width: 10, height: 80, color: "lime", score: 0 }; // smaller paddle
+    ai = { x: 580, y: 200, width: 10, height: 80, color: "red", score: 0 };
+    ball = { x: 300, y: 225, size: 10, speedX: 5, speedY: 4, color: "white" }; // faster start
     pongGameOver = false;
     pongOverlay.style.display = "none";
     pongCountdownEl.style.display = "none";
@@ -442,22 +436,25 @@
     if (ball.x <= player.x + player.width &&
         ball.y + ball.size >= player.y &&
         ball.y <= player.y + player.height) {
-      ball.speedX *= -1;
+      ball.speedX *= -1.1; // bounce + speed up
       ball.x = player.x + player.width;
+      ball.speedY += (Math.random() - 0.5) * 2; // random curve
     }
 
     if (ball.x + ball.size >= ai.x &&
         ball.y + ball.size >= ai.y &&
         ball.y <= ai.y + ai.height) {
-      ball.speedX *= -1;
+      ball.speedX *= -1.1;
       ball.x = ai.x - ball.size;
+      ball.speedY += (Math.random() - 0.5) * 2;
     }
 
     if (ball.x < 0) { ai.score++; resetBall(); }
     if (ball.x > 600) { player.score++; resetBall(); }
 
-    if (ai.y + ai.height/2 < ball.y) ai.y += 3;
-    else ai.y -= 3;
+    // AI is faster
+    if (ai.y + ai.height/2 < ball.y) ai.y += 5;
+    else ai.y -= 5;
 
     pongScoreEl.textContent = `Player: ${player.score} | Opponent: ${ai.score}`;
 
@@ -466,7 +463,8 @@
 
   function resetBall() {
     ball.x = 300; ball.y = 225;
-    ball.speedX *= -1;
+    ball.speedX = (Math.random() > 0.5 ? 4 : -4);
+    ball.speedY = (Math.random() - 0.5) * 6;
   }
 
   function startPongCountdown() {
