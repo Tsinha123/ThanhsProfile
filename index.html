@@ -310,8 +310,8 @@
   function spawnCars() {
     cars = [];
     const rainbowColors = ["red", "orange", "yellow", "green", "blue", "indigo", "violet"];
-    // start from 1 instead of 0 → skips bottom lane so it's safe at spawn
-    for (let i = 1; i <= 8; i++) {
+    // include bottom lane again → 8 cars total
+    for (let i = 0; i < 8; i++) {
       cars.push({
         x: Math.random() * 600,
         y: i * 60 + 30,
