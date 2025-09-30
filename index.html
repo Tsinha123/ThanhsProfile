@@ -309,14 +309,14 @@
 
   function spawnCars() {
     cars = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 8; i++) { // more cars
       cars.push({
         x: Math.random() * 600,
-        y: i * 90 + 40,
+        y: i * 60 + 30, // tighter spacing
         width: 50,
         height: 20,
-        speed: 2 + Math.random() * 3,
-        color: "red"
+        speed: 3 + Math.random() * 4, // faster cars
+        color: Math.random() > 0.5 ? "red" : "orange"
       });
     }
   }
@@ -347,6 +347,12 @@
     if (!gameOver && crossyPlayer.y < 10) {
       score++;
       crossyPlayer.y = 400;
+
+      // 🚀 Make cars faster each time you score
+      cars.forEach(car => {
+        car.speed *= 1.15; // +15% speed increase per score
+      });
+
       if (score >= 10) {
         gameOver = true;
         crossyMessage.textContent = "Player Wins!";
