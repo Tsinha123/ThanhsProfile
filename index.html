@@ -371,7 +371,7 @@
 
     if (!gameOver && crossyPlayer.y < 10) {
       score++;
-      crossyPlayer.y = 400;
+      crossyPlayer.y = 420;
       cars.forEach(car => { car.speed *= 1.15; });
       if (score >= 10) {
         gameOver = true;
