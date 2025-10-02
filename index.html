@@ -227,293 +227,280 @@
   </main>
 
 <script>
-  /* ===== Visitor Counter ===== */
-  function updateVisitorCounter() {
-    let count = localStorage.getItem("visitorCount");
-    if (!count) count = 0;
-    count++;
-    localStorage.setItem("visitorCount", count);
-    document.getElementById("visitorCounter").textContent = "Visitors: " + count;
+/* ===== Visitor Counter ===== */
+function updateVisitorCounter() {
+  let count = localStorage.getItem("visitorCount");
+  if (!count) count = 0;
+  count++;
+  localStorage.setItem("visitorCount", count);
+  document.getElementById("visitorCounter").textContent = "Visitors: " + count;
+}
+updateVisitorCounter();
+
+/* ===== Date & Time ===== */
+function updateDateTime() {
+  const now = new Date();
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const dateStr = now.toLocaleDateString(undefined, options);
+  const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  document.getElementById('datetime').textContent = `${dateStr} — ${timeStr}`;
+}
+setInterval(updateDateTime, 1000);
+updateDateTime();
+
+/* ===== Calendar ===== */
+const calendarDays = document.getElementById("calendarDays");
+const calendarMonth = document.getElementById("calendarMonth");
+const prevMonthBtn = document.getElementById("prevMonth");
+const nextMonthBtn = document.getElementById("nextMonth");
+
+let currentDate = new Date();
+let selectedDay = null;
+
+function renderCalendar(date) {
+  calendarDays.innerHTML = "";
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const monthName = date.toLocaleString("default", { month: "long" });
+  calendarMonth.textContent = `${monthName} ${year}`;
+
+  const dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  dayNames.forEach(day => {
+    const div = document.createElement("div");
+    div.textContent = day;
+    div.classList.add("day-name");
+    calendarDays.appendChild(div);
+  });
+
+  for (let i = 0; i < firstDay; i++) {
+    calendarDays.appendChild(document.createElement("div"));
   }
-  updateVisitorCounter();
 
-  /* ===== Date & Time ===== */
-  function updateDateTime() {
-    const now = new Date();
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    const dateStr = now.toLocaleDateString(undefined, options);
-    const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    document.getElementById('datetime').textContent = `${dateStr} — ${timeStr}`;
-  }
-  setInterval(updateDateTime, 1000);
-  updateDateTime();
+  for (let day = 1; day <= daysInMonth; day++) {
+    const div = document.createElement("div");
+    div.textContent = day;
+    div.classList.add("calendar-day");
 
-  /* ===== Calendar ===== */
-  const calendarDays = document.getElementById("calendarDays");
-  const calendarMonth = document.getElementById("calendarMonth");
-  const prevMonthBtn = document.getElementById("prevMonth");
-  const nextMonthBtn = document.getElementById("nextMonth");
+    const today = new Date();
+    if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+      div.classList.add("today");
+    }
+    if (selectedDay && selectedDay.day === day && selectedDay.month === month && selectedDay.year === year) {
+      div.classList.add("selected");
+    }
 
-  let currentDate = new Date();
-  let selectedDay = null;
-
-  function renderCalendar(date) {
-    calendarDays.innerHTML = "";
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    const monthName = date.toLocaleString("default", { month: "long" });
-    calendarMonth.textContent = `${monthName} ${year}`;
-
-    const dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-    dayNames.forEach(day => {
-      const div = document.createElement("div");
-      div.textContent = day;
-      div.classList.add("day-name");
-      calendarDays.appendChild(div);
+    div.addEventListener("click", () => {
+      selectedDay = { day, month, year };
+      renderCalendar(currentDate);
     });
 
-    for (let i = 0; i < firstDay; i++) {
-      calendarDays.appendChild(document.createElement("div"));
-    }
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const div = document.createElement("div");
-      div.textContent = day;
-      div.classList.add("calendar-day");
-
-      const today = new Date();
-      if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-        div.classList.add("today");
-      }
-      if (selectedDay && selectedDay.day === day && selectedDay.month === month && selectedDay.year === year) {
-        div.classList.add("selected");
-      }
-
-      div.addEventListener("click", () => {
-        selectedDay = { day, month, year };
-        renderCalendar(currentDate);
-      });
-
-      calendarDays.appendChild(div);
-    }
+    calendarDays.appendChild(div);
   }
-  prevMonthBtn.addEventListener("click", () => {
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    renderCalendar(currentDate);
-  });
-  nextMonthBtn.addEventListener("click", () => {
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    renderCalendar(currentDate);
-  });
+}
+prevMonthBtn.addEventListener("click", () => {
+  currentDate.setMonth(currentDate.getMonth() - 1);
   renderCalendar(currentDate);
+});
+nextMonthBtn.addEventListener("click", () => {
+  currentDate.setMonth(currentDate.getMonth() + 1);
+  renderCalendar(currentDate);
+});
+renderCalendar(currentDate);
 
-  /* ===== Crossy Road ===== */
-  const crossyCanvas = document.getElementById("crossyRoad");
-  const ctxC = crossyCanvas.getContext("2d");
-  const crossyScoreEl = document.getElementById("crossyScore");
-  const crossyOverlay = document.getElementById("crossyOverlay");
-  const countdownEl = document.getElementById("countdown");
-  const crossyMessage = document.getElementById("crossyMessage");
+/* ===== Crossy Road ===== */
+const crossyCanvas = document.getElementById("crossyRoad");
+const ctx = crossyCanvas.getContext("2d");
+const crossyScoreEl = document.getElementById("crossyScore");
+const crossyOverlay = document.getElementById("crossyOverlay");
+const countdownEl = document.getElementById("countdown");
 
-  let crossyPlayer, cars, score, gameOver;
+let player, cars, score, gameOver, countdown, countdownInterval;
 
-  function initCrossy() {
-    crossyPlayer = { x: 280, y: 420, size: 20, color: "lime" };
-    cars = [];
-    score = 0;
-    gameOver = false;
-    crossyOverlay.style.display = "none";
-    countdownEl.style.display = "none";
-    spawnCars();
-    requestAnimationFrame(crossyLoop);
+function initCrossy() {
+  player = { x: 300, y: 420, size: 30, color: "lime" };
+  cars = [];
+  score = 0;
+  gameOver = false;
+  crossyOverlay.style.display = "none";
+  countdownEl.style.display = "none";
+  spawnCars();
+  requestAnimationFrame(crossyLoop);
+}
+
+function spawnCars() {
+  cars = [];
+  for (let i = 0; i < 5; i++) {
+    cars.push({ x: Math.random() * 600, y: i * 90, width: 60, height: 30, speed: 2 + Math.random() * 3, color: "red" });
   }
+}
 
-  function spawnCars() {
-    cars = [];
-    const rainbowColors = ["red", "orange", "yellow", "green", "blue", "indigo", "violet"];
-    for (let i = 0; i < 8; i++) {
-      cars.push({
-        x: Math.random() * 600,
-        y: i * 60 + 30,
-        width: 50,
-        height: 20,
-        speed: 3 + Math.random() * 4,
-        color: rainbowColors[Math.floor(Math.random() * rainbowColors.length)]
-      });
+function crossyLoop() {
+  if (gameOver) return;
+  ctx.clearRect(0, 0, 600, 450);
+
+  // Draw player
+  ctx.fillStyle = player.color;
+  ctx.fillRect(player.x, player.y, player.size, player.size);
+
+  // Draw cars
+  cars.forEach(car => {
+    car.x += car.speed;
+    if (car.x > 600) car.x = -car.width;
+    ctx.fillStyle = car.color;
+    ctx.fillRect(car.x, car.y, car.width, car.height);
+
+    if (player.x < car.x + car.width &&
+        player.x + player.size > car.x &&
+        player.y < car.y + car.height &&
+        player.y + player.size > car.y) {
+      gameOver = true;
+      document.getElementById("crossyMessage").textContent = "Game Over! Score: " + score;
+      crossyOverlay.style.display = "flex";
     }
-  }
-
-  function crossyLoop() {
-    if (gameOver) return;
-    ctxC.clearRect(0, 0, 600, 450);
-
-    ctxC.fillStyle = crossyPlayer.color;
-    ctxC.fillRect(crossyPlayer.x, crossyPlayer.y, crossyPlayer.size, crossyPlayer.size);
-
-    cars.forEach(car => {
-      car.x += car.speed;
-      if (car.x > 600) car.x = -car.width;
-      ctxC.fillStyle = car.color;
-      ctxC.fillRect(car.x, car.y, car.width, car.height);
-
-      if (crossyPlayer.x < car.x + car.width &&
-          crossyPlayer.x + crossyPlayer.size > car.x &&
-          crossyPlayer.y < car.y + car.height &&
-          crossyPlayer.y + crossyPlayer.size > car.y) {
-        gameOver = true;
-        crossyMessage.textContent = "Game Over!";
-        crossyOverlay.style.display = "flex";
-      }
-    });
-
-    if (!gameOver && crossyPlayer.y < 10) {
-      score++;
-      crossyPlayer.y = 420;
-      cars.forEach(car => { car.speed *= 1.15; });
-      if (score >= 10) {
-        gameOver = true;
-        crossyMessage.textContent = "Player Wins!";
-        crossyOverlay.style.display = "flex";
-      }
-    }
-    crossyScoreEl.textContent = "Score: " + score;
-
-    if (!gameOver) requestAnimationFrame(crossyLoop);
-  }
-
-  function startCountdown() {
-    crossyOverlay.style.display = "none";
-    countdownEl.style.display = "flex";
-    let count = 3;
-    countdownEl.textContent = count;
-    let interval = setInterval(() => {
-      count--;
-      if (count > 0) {
-        countdownEl.textContent = count;
-      } else {
-        clearInterval(interval);
-        countdownEl.style.display = "none";
-        initCrossy();
-      }
-    }, 1000);
-  }
-
-  window.addEventListener("keydown", e => {
-    if (gameOver) return;
-    const step = 20;
-    if (e.key === "ArrowUp") crossyPlayer.y -= step;
-    if (e.key === "ArrowDown") crossyPlayer.y += step;
-    if (e.key === "ArrowLeft") crossyPlayer.x -= step;
-    if (e.key === "ArrowRight") crossyPlayer.x += step;
   });
 
-  initCrossy();
+  crossyScoreEl.textContent = "Score: " + score;
+  requestAnimationFrame(crossyLoop);
+}
 
-  /* ===== Ping Pong (Harder) ===== */
-  const pongCanvas = document.getElementById("pingPong");
-  const ctxP = pongCanvas.getContext("2d");
-  const pongScoreEl = document.getElementById("pongScore");
-  const pongOverlay = document.getElementById("pongOverlay");
-  const pongCountdownEl = document.getElementById("pongCountdown");
-  const pongWinnerEl = document.getElementById("pongWinner");
+document.addEventListener("keydown", e => {
+  if (gameOver) return;
+  if (e.key === "ArrowUp") { player.y -= 30; score++; }
+  if (e.key === "ArrowDown") player.y += 30;
+  if (e.key === "ArrowLeft") player.x -= 30;
+  if (e.key === "ArrowRight") player.x += 30;
 
-  let player, ai, ball, pongGameOver;
+  if (player.y < 0) { player.y = 420; score += 5; }
+});
 
-  function initPong() {
-    player = { x: 10, y: 200, width: 10, height: 80, color: "lime", score: 0 }; // smaller paddle
-    ai = { x: 580, y: 200, width: 10, height: 80, color: "red", score: 0 };
-    ball = { x: 300, y: 225, size: 10, speedX: 5, speedY: 4, color: "white" }; // faster start
-    pongGameOver = false;
-    pongOverlay.style.display = "none";
-    pongCountdownEl.style.display = "none";
-    requestAnimationFrame(pongLoop);
-  }
-
-  function pongLoop() {
-    if (pongGameOver) return;
-
-    if (player.score >= 10 || ai.score >= 10) {
-      pongGameOver = true;
-      pongWinnerEl.textContent = player.score >= 10 ? "Player Wins!" : "Opponent Wins!";
-      pongOverlay.style.display = "flex";
-      return;
+function startCountdown() {
+  countdown = 3;
+  countdownEl.style.display = "flex";
+  countdownEl.textContent = countdown;
+  countdownInterval = setInterval(() => {
+    countdown--;
+    if (countdown <= 0) {
+      clearInterval(countdownInterval);
+      initCrossy();
+    } else {
+      countdownEl.textContent = countdown;
     }
+  }, 1000);
+}
+startCountdown();
 
-    ctxP.clearRect(0, 0, 600, 450);
+/* ===== Ping Pong (Progressive Difficulty) ===== */
+const pongCanvas = document.getElementById("pingPong");
+const ctxP = pongCanvas.getContext("2d");
+const pongScoreEl = document.getElementById("pongScore");
+const pongOverlay = document.getElementById("pongOverlay");
+const pongCountdownEl = document.getElementById("pongCountdown");
+const pongWinnerEl = document.getElementById("pongWinner");
 
-    ctxP.fillStyle = player.color;
-    ctxP.fillRect(player.x, player.y, player.width, player.height);
-    ctxP.fillStyle = ai.color;
-    ctxP.fillRect(ai.x, ai.y, ai.width, ai.height);
+let playerP, ai, ball, pongGameOver, rallyCount, aiSpeed;
 
-    ctxP.fillStyle = ball.color;
-    ctxP.fillRect(ball.x, ball.y, ball.size, ball.size);
+function initPong() {
+  playerP = { x: 10, y: 200, width: 10, height: 80, color: "lime", score: 0 };
+  ai = { x: 580, y: 200, width: 10, height: 80, color: "red", score: 0 };
+  ball = { x: 300, y: 225, size: 10, speedX: 3, speedY: 2, color: "white" };
+  aiSpeed = 3;
+  rallyCount = 0;
+  pongGameOver = false;
+  pongOverlay.style.display = "none";
+  pongCountdownEl.style.display = "none";
+  requestAnimationFrame(pongLoop);
+}
 
-    ball.x += ball.speedX;
-    ball.y += ball.speedY;
+function pongLoop() {
+  if (pongGameOver) return;
 
-    if (ball.y <= 0 || ball.y + ball.size >= 450) ball.speedY *= -1;
+  if (playerP.score >= 10 || ai.score >= 10) {
+    pongGameOver = true;
+    pongWinnerEl.textContent = playerP.score >= 10 ? "Player Wins!" : "Opponent Wins!";
+    pongOverlay.style.display = "flex";
+    return;
+  }
 
-    if (ball.x <= player.x + player.width &&
-        ball.y + ball.size >= player.y &&
-        ball.y <= player.y + player.height) {
-      ball.speedX *= -1.1; // bounce + speed up
-      ball.x = player.x + player.width;
-      ball.speedY += (Math.random() - 0.5) * 2; // random curve
+  ctxP.clearRect(0, 0, 600, 450);
+
+  ctxP.fillStyle = playerP.color;
+  ctxP.fillRect(playerP.x, playerP.y, playerP.width, playerP.height);
+  ctxP.fillStyle = ai.color;
+  ctxP.fillRect(ai.x, ai.y, ai.width, ai.height);
+
+  ctxP.fillStyle = ball.color;
+  ctxP.fillRect(ball.x, ball.y, ball.size, ball.size);
+
+  ball.x += ball.speedX;
+  ball.y += ball.speedY;
+
+  if (ball.y <= 0 || ball.y + ball.size >= 450) {
+    ball.speedY *= -1;
+  }
+
+  if (ball.x <= playerP.x + playerP.width &&
+      ball.y + ball.size >= playerP.y &&
+      ball.y <= playerP.y + playerP.height) {
+    ball.speedX *= -1;
+    rallyCount++;
+    ball.speedX *= 1.1;
+    ball.speedY *= 1.1;
+  }
+
+  if (ball.x + ball.size >= ai.x &&
+      ball.y + ball.size >= ai.y &&
+      ball.y <= ai.y + ai.height) {
+    ball.speedX *= -1;
+    rallyCount++;
+    ball.speedX *= 1.1;
+    ball.speedY *= 1.1;
+  }
+
+  ai.y += (ball.y - (ai.y + ai.height / 2)) * 0.05 * (1 + rallyCount / 20);
+
+  if (ball.x < 0) {
+    ai.score++;
+    resetBall();
+  } else if (ball.x > 600) {
+    playerP.score++;
+    resetBall();
+  }
+
+  pongScoreEl.textContent = `Player: ${playerP.score} | Opponent: ${ai.score}`;
+  requestAnimationFrame(pongLoop);
+}
+
+function resetBall() {
+  ball.x = 300;
+  ball.y = 225;
+  ball.speedX = 3 * (Math.random() > 0.5 ? 1 : -1);
+  ball.speedY = 2 * (Math.random() > 0.5 ? 1 : -1);
+  rallyCount = 0;
+}
+
+pongCanvas.addEventListener("mousemove", e => {
+  const rect = pongCanvas.getBoundingClientRect();
+  playerP.y = e.clientY - rect.top - playerP.height / 2;
+});
+
+function startPongCountdown() {
+  let countdown = 3;
+  pongCountdownEl.style.display = "flex";
+  pongCountdownEl.textContent = countdown;
+  const interval = setInterval(() => {
+    countdown--;
+    if (countdown <= 0) {
+      clearInterval(interval);
+      initPong();
+    } else {
+      pongCountdownEl.textContent = countdown;
     }
-
-    if (ball.x + ball.size >= ai.x &&
-        ball.y + ball.size >= ai.y &&
-        ball.y <= ai.y + ai.height) {
-      ball.speedX *= -1.1;
-      ball.x = ai.x - ball.size;
-      ball.speedY += (Math.random() - 0.5) * 2;
-    }
-
-    if (ball.x < 0) { ai.score++; resetBall(); }
-    if (ball.x > 600) { player.score++; resetBall(); }
-
-    // AI is faster
-    if (ai.y + ai.height/2 < ball.y) ai.y += 5;
-    else ai.y -= 5;
-
-    pongScoreEl.textContent = `Player: ${player.score} | Opponent: ${ai.score}`;
-
-    requestAnimationFrame(pongLoop);
-  }
-
-  function resetBall() {
-    ball.x = 300; ball.y = 225;
-    ball.speedX = (Math.random() > 0.5 ? 4 : -4);
-    ball.speedY = (Math.random() - 0.5) * 6;
-  }
-
-  function startPongCountdown() {
-    pongOverlay.style.display = "none";
-    pongCountdownEl.style.display = "flex";
-    let count = 3;
-    pongCountdownEl.textContent = count;
-    let interval = setInterval(() => {
-      count--;
-      if (count > 0) {
-        pongCountdownEl.textContent = count;
-      } else {
-        clearInterval(interval);
-        pongCountdownEl.style.display = "none";
-        initPong();
-      }
-    }, 1000);
-  }
-
-  pongCanvas.addEventListener("mousemove", e => {
-    const rect = pongCanvas.getBoundingClientRect();
-    player.y = e.clientY - rect.top - player.height/2;
-  });
-
-  initPong();
+  }, 1000);
+}
+startPongCountdown();
 </script>
 </body>
 </html>
